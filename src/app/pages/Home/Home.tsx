@@ -1,17 +1,16 @@
-import React from "react";
+import React from "react"
+import HeroSection from "./HeroSection"
+import FeatureSection from "./FeatureSection"
+import FeaturedChannelsSection from "./FeaturedChannelsSection"
 
-const Home: React.FC = () => {
+const HomePage: React.FC = () => {
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50 text-gray-800">
-      <h1 className="text-4xl font-bold mb-4">Welcome to My Website</h1>
-      <p className="text-lg text-gray-600 mb-8">
-      HOME PAGE
-      </p>
-      <button className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition">
-        Get Started
-      </button>
+    <div className="min-h-screen bg-black text-white flex flex-col items-center justify-center relative overflow-hidden px-6">
+      <HeroSection />
+      <FeatureSection />
+      <FeaturedChannelsSection />
     </div>
-  );
-};
+  )
+}
 
-export default Home;
+export default HomePage
