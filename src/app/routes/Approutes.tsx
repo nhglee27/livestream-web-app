@@ -1,15 +1,13 @@
-import { Routes, Route, BrowserRouter } from 'react-router-dom';
-import { HomePage,AboutPage , LoginPage } from '../pages';
+import { Routes, Route } from 'react-router-dom'
+import { HomePage, AboutPage, LoginPage, RegisterPage } from '../pages'
 
-export default function AppRoutes() {
+export function AppRoutes() {
   return (
-    <BrowserRouter>
-      <Routes>
-        <Route path="/" element={<LoginPage />} />
-        <Route path="/about" element={<AboutPage />} />
-        {/* <Route path="/login" element={<LoginPage />} /> */}
-        {/* add more routes */}
-      </Routes>
-    </BrowserRouter>
-  );
+    <Routes>
+      <Route path="/" element={<HomePage />} />
+      <Route path="/about" element={<AboutPage />} />
+      <Route path="/login" element={<LoginPage />} />
+      <Route path="/register" element={<RegisterPage />} />
+    </Routes>
+  )
 }
