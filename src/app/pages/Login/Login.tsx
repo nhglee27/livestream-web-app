@@ -2,29 +2,34 @@ import { useState } from 'react';
 import Confetti from 'react-confetti';
 import {Card , BackgroundShapes} from '../../components/login';
 import { authApi } from '../../api/authAPI';
+import { useNavigate } from 'react-router-dom';
+import { LoginCredentials , LoginResponse } from '../../dto/login';
+import cookies from 'js-cookies';
+
 const Login = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [remember, setRemember] = useState(false);
   const [loading, setLoading] = useState(false);
   const [showConfetti, setShowConfetti] = useState(false);
+  const navigate = useNavigate();
+
 
   const handleSubmit = () => {
     setLoading(true);
 
-// console.log('Login submitted:', { email, password, remember });
-    // // Simulated async login
-    // setTimeout(() => {
-    //   setLoading(false);
-    //   setShowConfetti(true);
-    //   setTimeout(() => setShowConfetti(false), 5000);
-    // }, 2000);
-    const credentials = { email, password };
+    const credentials: LoginCredentials = { email, password };
     authApi.login(credentials)
       .then((response) => {
-        console.log('Login successful:', response.data);
+        // store data in cookies
+        const userData : LoginResponse = response.data;
+
+        cookies.setItem('token', userData.token);
+        cookies.setItem('name', userData.name);
+        // console.log('Login successful:', response.data);
         setShowConfetti(true);
         setTimeout(() => setShowConfetti(false), 5000);
+        navigate('/');
       })
       .catch((error) => {
         console.error('Login failed:', error);

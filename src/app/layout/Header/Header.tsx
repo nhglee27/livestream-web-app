@@ -11,6 +11,7 @@ const Header: React.FC = () => {
     { name: "Home", icon: <Home className="w-4 h-4" />, path: "/" },
     { name: "Channels", icon: <Tv className="w-4 h-4" />, path: "/channels" },
     { name: "Community", icon: <Users className="w-4 h-4" />, path: "/community" },
+    {name : "About", icon: <Users className="w-4 h-4" />, path: "/about" },
   ]
 
   return (
