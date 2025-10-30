@@ -1,5 +1,7 @@
+
 // src/api/login.ts
 import { LoginCredentials, LoginResponse } from '../dto/login';
+import { RegisterCredentials, RegisterResponse } from '../dto/register';
 import axiosClient from "./axiosClients";
 
 
@@ -26,11 +28,8 @@ export const authApi = {
     return await axiosClient.post<LoginResponse>("/auth/login", credentials);
   },
 
-  register: (email: string, password: string, fullName: string) => {
-    return axiosClient.post("/auth/register", { email, password, fullName });
-  },
+  register: async (credentials: RegisterCredentials) => {
+    return axiosClient.post<RegisterResponse>("/auth/register", credentials);
+  }
 
-  getProfile: () => {
-    return axiosClient.get("/auth/profile");
-  },
 };
