@@ -5,7 +5,7 @@ import { authApi } from '../../api/authAPI';
 import { useNavigate } from 'react-router-dom';
 import { LoginCredentials , LoginResponse } from '../../dto/login';
 import cookies from 'js-cookies';
-
+import { UserModel } from '../../model/user';
 const Login = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -21,15 +21,22 @@ const Login = () => {
     const credentials: LoginCredentials = { email, password };
     authApi.login(credentials)
       .then((response) => {
-        // store data in cookies
-        const userData : LoginResponse = response.data;
+        if (response.data.success) {
+          // store data in cookies
+        const userData : UserModel = {
+          token: response.data.data.token,
+          email: response.data.data.email,
+          name: response.data.data.name,
+        };
 
-        cookies.setItem('token', userData.token);
-        cookies.setItem('name', userData.name);
-        // console.log('Login successful:', response.data);
+        cookies.setItem('userData', JSON.stringify(userData));
         setShowConfetti(true);
         setTimeout(() => setShowConfetti(false), 5000);
         navigate('/');
+
+
+        
+        }
       })
       .catch((error) => {
         console.error('Login failed:', error);
