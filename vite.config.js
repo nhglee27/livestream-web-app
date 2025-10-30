@@ -13,5 +13,6 @@ export default defineConfig({
   }
   ,compilerOptions: {
     "types": ["vite/client"]
-  }
+  },
+  
 })
