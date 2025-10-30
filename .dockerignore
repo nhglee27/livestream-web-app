@@ -1,0 +1,34 @@
+# Node dependencies
+node_modules
+npm-debug.log
+yarn-error.log
+
+# Build output (we rebuild inside Docker)
+build
+dist
+
+# Local env files (optional)
+.env.local
+.env.development
+.env.test
+
+# Mac / Linux / Windows system files
+.DS_Store
+Thumbs.db
+
+# IDE / editor settings
+.vscode
+.idea
+*.swp
+
+# Git files
+.git
+.gitignore
+
+# Docker files
+Dockerfile
+docker-compose.yml
+
+# Logs
+*.log
+logs
