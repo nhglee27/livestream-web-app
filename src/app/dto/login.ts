@@ -6,9 +6,16 @@ export interface LoginCredentials {
 }
 
 
+
+
+
 // DTO for login response
 export interface LoginResponse {
-  token: string;
-    name: string;
+  success: boolean;
+  message: string;
+  data: {
+    token: string;
     email: string;
+    name: string;
+  };
 }
