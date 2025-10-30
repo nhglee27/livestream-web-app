@@ -10,9 +10,28 @@ export default defineConfig({
     alias: {
       '@': path.resolve(__dirname, './src')
     }
-  }
-  ,compilerOptions: {
-    "types": ["vite/client"]
   },
-  
+  define: {
+    global: "window", // ✅ define global for sockjs-client
+  },
+  server: {
+    proxy: {
+      '/api': 'http://localhost:8080',
+     '/ws': {
+        target: 'http://localhost:8080',
+        changeOrigin: true,
+        ws: true,
+        secure: false,
+        configure: (proxy, options) => {
+          proxy.on('proxyReqWs', (proxyReq, req, socket) => {
+            socket.on('error', (err) => {
+              console.log('WebSocket proxy error:', err);
+            });
+          });
+        }
+      }
+    }
+  }
 })
+
+
