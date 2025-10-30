@@ -23,7 +23,7 @@ export const authApi = {
 
   // 
   login: async (credentials: LoginCredentials) => {
-    return await axiosClient.post<Promise<LoginResponse>>("/auth/login", credentials);
+    return await axiosClient.post<LoginResponse>("/auth/login", credentials);
   },
 
   register: (email: string, password: string, fullName: string) => {
