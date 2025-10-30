@@ -1,0 +1,33 @@
+version: '3.8'
+services:
+  nms:
+    build: ./nms
+    container_name: nms
+    restart: unless-stopped
+    ports:
+      - "1935:1935"   # RTMP ingest from OBS
+      - "8000:8000"   # direct NMS http (optional)
+    volumes:
+      - ./nms/media:/media
+    networks:
+      - livestream-net
+
+  nginx:
+    build: ./nginx
+    container_name: nginx-proxy
+    restart: unless-stopped
+    ports:
+      - "80:80"
+    depends_on:
+      - nms
+    volumes:
+      - nginx-cache:/var/cache/nginx
+    networks:
+      - livestream-net
+
+volumes:
+  nginx-cache:
+
+networks:
+  livestream-net:
+    driver: bridge
