@@ -1,5 +1,7 @@
 
-import { ActionButtons, ChatBox, RelatedChannels, StreamInfo, StreamPlayer } from '../../components/live';
+import { ActionButtons, ChatBox, RelatedChannels, StreamInfo } from '../../components/live';
+import StreamPlayer from '../../components/live/StreamPlayer';
+
 const mockRelated = [
   {
     id: '1',
@@ -41,7 +43,7 @@ export default function LiveStreamPage() {
         <div className="flex-1 lg:w-3/4">
           {/* Video */}
           <StreamPlayer
-            src="https://your-hls-stream.com/playlist.m3u8"
+            src="http://localhost:8000/live/test/index.m3u8"
             poster="/placeholder-poster.jpg"
           />
 
