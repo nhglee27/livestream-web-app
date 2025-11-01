@@ -8,7 +8,7 @@ export function AppRoutes() {
       <Route path="/about" element={<AboutPage />} />
       <Route path="/login" element={<LoginPage />} />
       <Route path="/register" element={<RegisterPage />} />
-      <Route path="/live" element={<LiveStreamPage />} />
+      <Route path="/live/:channelName" element={<LiveStreamPage />} />
     </Routes>
   )
 }
