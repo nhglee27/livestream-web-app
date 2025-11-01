@@ -77,7 +77,7 @@ const HeroSection = () => {
         whileTap={{ scale: 0.96 }}
         className="mt-6"
       >
-        <button onClick={handleGetStreamChannel} className="px-8 py-4 rounded-2xl bg-gradient-to-r from-purple-500 to-cyan-500 hover:shadow-lg hover:shadow-purple-500/30 transition-all font-semibold flex items-center gap-2 mx-auto text-white">
+        <button onClick={handleGetStreamChannel}  className="px-8 py-4 rounded-2xl bg-gradient-to-r from-purple-500 to-cyan-500 hover:shadow-lg hover:shadow-purple-500/30 transition-all font-semibold flex items-center gap-2 mx-auto text-white">
           Go Live
         </button>
       </motion.div>
