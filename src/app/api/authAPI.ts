@@ -3,7 +3,7 @@
 import { LoginCredentials, LoginResponse } from '../dto/login';
 import { RegisterCredentials, RegisterResponse } from '../dto/register';
 import axiosClient from "./axiosClients";
-
+import { StreamChannelRequest , StreamChannelResponse } from '../dto/stream';
 
 // const api = axios.create({
 //   baseURL: process.env.VITE_API_URL || 'http://localhost:8080/api/v1',
@@ -32,4 +32,13 @@ export const authApi = {
     return axiosClient.post<RegisterResponse>("/auth/register", credentials);
   }
 
+};
+
+
+
+export const streamApi = {
+  // get StreamChannel
+  getStreamChannel: async (credentials : StreamChannelRequest) => {
+    return await axiosClient.get<StreamChannelResponse>("/streamers/channel", { params: credentials });
+  },
 };
