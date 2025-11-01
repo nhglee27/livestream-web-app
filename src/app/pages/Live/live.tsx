@@ -43,7 +43,7 @@ export default function LiveStreamPage() {
         <div className="flex-1 lg:w-3/4">
           {/* Video */}
           <StreamPlayer
-            src="http://localhost:8000/live/test/index.m3u8"
+            src="http://localhost:8000/live/my_channel/index.m3u8"
             poster="/placeholder-poster.jpg"
           />
 
