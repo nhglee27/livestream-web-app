@@ -48,11 +48,10 @@ export default function ChatBox({ channelName }: ChatBoxProps) {
     };
 
     clientRef.current.publish({
-      destination: '/app/chat',
+      destination: `/app/chat/${channelName}`,
       body: JSON.stringify(messagePayload),
     });
 
-    console.log('Sent:', messagePayload);
   };
 
   // Handle send form
@@ -120,79 +119,94 @@ export default function ChatBox({ channelName }: ChatBoxProps) {
     };
   }, [channelName]);
 
+  console.log('Messages:', messages);
+
   // Auto-scroll when messages change
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
   return (
-    <div className="flex flex-col h-full bg-gray-900 text-white">
-      {/* Header */}
-      <div className="p-4 border-b border-gray-800 flex items-center justify-between">
-        <h3 className="font-semibold flex items-center">
-          <MessageSquare className="w-5 h-5 mr-2" />
-          {channelName || 'Chat'}
-        </h3>
-        <div className="flex items-center gap-2">
-          <span className="text-sm text-gray-400">
-            {messages.length} msg{messages.length !== 1 ? 's' : ''}
-          </span>
-          <span
-            className={`w-2 h-2 rounded-full ${
-              isConnected ? 'bg-green-500' : 'bg-red-500'
-            }`}
-            title={isConnected ? 'Connected' : 'Connecting...'}
-          />
-        </div>
-      </div>
-
-      {/* Messages */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-3">
-        {messages.length === 0 ? (
-          <div className="text-center text-gray-500 mt-12">
-            <MessageSquare className="w-12 h-12 mx-auto mb-3 text-gray-600" />
-            <p className="text-lg">No messages yet</p>
-            <p className="text-sm">Say something!</p>
-          </div>
-        ) : (
-          messages.map((m, index) => (
-            <div
-              key={index}
-              className={`flex ${
-                m.sender === sender ? 'justify-end' : 'justify-start'
-              }`}
-            >
-              <div
-                className={`max-w-xs px-3 py-2 rounded-lg text-sm ${
-                  m.sender === sender
-                    ? 'bg-purple-600 text-white'
-                    : 'bg-gray-700 text-gray-200'
-                }`}
-              >
-                {m.sender !== sender && (
-                  <span className="font-medium text-purple-400">
-                    {m.sender}:{' '}
-                  </span>
-                )}
-                <span>{m.content}</span>
-              </div>
-            </div>
-          ))
-        )}
-        <div ref={messagesEndRef} />
-      </div>
-
-      {/* Input */}
-      <form onSubmit={handleSubmit} className="p-4 border-t border-gray-800">
-        <input
-          type="text"
-          value={input}
-          onChange={(e) => setInput(e.target.value)}
-          placeholder={isConnected ? 'Type a message...' : 'Connecting...'}
-          disabled={!isConnected}
-          className="w-full px-4 py-2 bg-gray-800 text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 disabled:opacity-50"
-        />
-      </form>
+   <div className="flex flex-col h-full bg-gradient-to-b from-gray-900 via-gray-950 to-black text-white rounded-2xl shadow-2xl overflow-hidden">
+  {/* Header */}
+  <div className="p-4 border-b border-gray-800 flex items-center justify-between bg-gray-900/70 backdrop-blur-md">
+    <h3 className="font-semibold flex items-center text-lg tracking-wide">
+      <MessageSquare className="w-5 h-5 mr-2 text-purple-400" />
+      {channelName || 'Chat Room'}
+    </h3>
+    <div className="flex items-center gap-3">
+      <span className="text-sm text-gray-400">
+        💬 {messages.length} message{messages.length !== 1 ? 's' : ''}
+      </span>
+      <span
+        className={`w-2.5 h-2.5 rounded-full shadow ${
+          isConnected
+            ? 'bg-green-400 shadow-green-500/60 animate-pulse'
+            : 'bg-red-500'
+        }`}
+        title={isConnected ? 'Connected' : 'Connecting...'}
+      />
     </div>
+  </div>
+
+  {/* Messages */}
+  <div className="flex-1 overflow-y-auto px-4 py-3 space-y-4 scrollbar-thin scrollbar-thumb-gray-700 scrollbar-track-gray-900">
+    {messages.length === 0 ? (
+      <div className="text-center text-gray-500 mt-20">
+        <MessageSquare className="w-12 h-12 mx-auto mb-3 text-gray-600" />
+        <p className="text-lg font-medium">No messages yet</p>
+        <p className="text-sm text-gray-400">Start the conversation 🎤</p>
+      </div>
+    ) : (
+      messages.map((m, index) => (
+        <div
+          key={index}
+          className={`flex items-end ${
+            m.sender === sender ? 'justify-end' : 'justify-start'
+          }`}
+        >
+          {m.sender !== sender && (
+            <div className="text-xs text-gray-400 mr-2 mb-1">{m.sender}</div>
+          )}
+          <div
+            className={`relative max-w-xs md:max-w-md px-4 py-2 rounded-2xl shadow-lg text-sm transition-all duration-300 ${
+              m.sender === sender
+                ? 'bg-purple-600 text-white rounded-br-none'
+                : 'bg-gray-800 text-gray-100 rounded-bl-none'
+            }`}
+          >
+            {m.content}
+           
+          </div>
+        </div>
+      ))
+    )}
+    <div ref={messagesEndRef} />
+  </div>
+
+  {/* Input */}
+  <form
+    onSubmit={handleSubmit}
+    className="p-4 border-t border-gray-800 bg-gray-900/70 backdrop-blur-md"
+  >
+    <div className="flex items-center gap-3">
+      <input
+        type="text"
+        value={input}
+        onChange={(e) => setInput(e.target.value)}
+        placeholder={isConnected ? 'Type a message...' : 'Connecting...'}
+        disabled={!isConnected}
+        className="flex-1 px-4 py-2.5 bg-gray-800/80 text-white rounded-full focus:outline-none focus:ring-2 focus:ring-purple-500 disabled:opacity-50 placeholder-gray-500 transition"
+      />
+      <button
+        type="submit"
+        disabled={!isConnected || !input.trim()}
+        className="px-4 py-2 rounded-full bg-purple-600 hover:bg-purple-700 active:scale-95 transition text-sm font-semibold shadow-lg disabled:opacity-40 disabled:cursor-not-allowed"
+      >
+        Send
+      </button>
+    </div>
+  </form>
+</div>
   );
 }
