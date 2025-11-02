@@ -1,12 +1,23 @@
+'use client'
+
 import { motion } from "framer-motion"
 import { UserCircle2 } from "lucide-react"
+import { useNavigate } from 'react-router-dom'
 
 const FeaturedChannelsSection = () => {
+  const router = useNavigate()
+
   const channels = [
-    { name: "GamerOne", viewers: "12.4K", game: "Valorant" },
+    { name: "my_channel", viewers: "12.4K", game: "Valorant" },
     { name: "ProStreamer", viewers: "9.8K", game: "League of Legends" },
     { name: "PixelHero", viewers: "7.1K", game: "Minecraft" },
   ]
+
+    const navigate = useNavigate()
+
+    const handleClick = (channelName: string) => {
+      navigate(`/live/${channelName}`)
+    }
 
   return (
     <motion.section
@@ -26,7 +37,8 @@ const FeaturedChannelsSection = () => {
           <motion.div
             key={i}
             whileHover={{ scale: 1.05 }}
-            className="bg-white/5 rounded-2xl p-6 text-left hover:bg-white/10 transition-all shadow-lg shadow-black/20"
+            onClick={() => handleClick(ch.name)}
+            className="cursor-pointer bg-white/5 rounded-2xl p-6 text-left hover:bg-white/10 transition-all shadow-lg shadow-black/20"
           >
             <div className="flex items-center gap-4">
               <UserCircle2 className="w-10 h-10 text-purple-400" />
