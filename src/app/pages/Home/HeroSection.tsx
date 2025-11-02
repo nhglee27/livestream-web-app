@@ -3,7 +3,7 @@ import { PlayCircle, Users, Zap } from "lucide-react"
 import { streamApi } from "../../api/authAPI"
 import { StreamChannelRequest } from "../../dto/stream"
 import { useNavigate } from "react-router-dom"
-const HeroSection = () => {
+const git  HeroSection = () => {
   
     const navigate = useNavigate();
   // call request to server to  get StreamChannel 
