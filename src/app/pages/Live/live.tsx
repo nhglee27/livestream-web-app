@@ -37,21 +37,18 @@ const mockRelated = [
 ];
 
 
-
 export default function LiveStreamPage() {
   const { channelName } = useParams();
+
   return (
     <div className="min-h-screen bg-black text-white">
       <div className="flex flex-col lg:flex-row">
-        {/* Left: Player + Info + Actions */}
         <div className="flex-1 lg:w-3/4">
-          {/* Video */}
           <StreamPlayer
-            src="http://localhost:8000/live/test/index.m3u8"
+            src={`http://localhost:8000/live/${channelName}/index.m3u8`}
             poster="/placeholder-poster.jpg"
           />
 
-          {/* Info */}
           <StreamInfo
             title="Stardew Valley - Cozy Farm Building Stream"
             streamer={channelName || 'Unknown Streamer'}
@@ -60,13 +57,11 @@ export default function LiveStreamPage() {
             live
           />
 
-          {/* Buttons */}
           <div className="p-4 lg:p-6 flex justify-between items-center border-b border-gray-800">
             <ActionButtons />
           </div>
         </div>
 
-        {/* Right: Chat + Related */}
         <aside className="lg:w-1/4 border-t lg:border-t-0 lg:border-l border-gray-800 flex flex-col">
           <div className="flex-1">
             <ChatBox channelName={channelName || ''} />

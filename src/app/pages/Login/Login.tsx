@@ -4,6 +4,7 @@ import {Card , BackgroundShapes} from '../../components/login';
 import { authApi } from '../../api/authAPI';
 import { useNavigate } from 'react-router-dom';
 import { LoginCredentials , LoginResponse } from '../../dto/login';
+// @ts-ignore
 import cookies from 'js-cookies';
 import { UserModel } from '../../model/user';
 const Login = () => {

@@ -3,7 +3,7 @@
 import { LoginCredentials, LoginResponse } from '../dto/login';
 import { RegisterCredentials, RegisterResponse } from '../dto/register';
 import axiosClient from "./axiosClients";
-import { StreamChannelRequest , StreamChannelResponse } from '../dto/stream';
+import { StreamChannelRequest , StreamChannelResponse, CreateStreamerChannelRequest, CreateStreamerChannelRespone } from '../dto/stream';
 
 // const api = axios.create({
 //   baseURL: process.env.VITE_API_URL || 'http://localhost:8080/api/v1',
@@ -37,8 +37,14 @@ export const authApi = {
 
 
 export const streamApi = {
-  // get StreamChannel
-  getStreamChannel: async (credentials : StreamChannelRequest) => {
+  // Lấy thông tin StreamChannel (nếu có endpoint GET /streamers/channel)
+  getStreamChannel: async (credentials: StreamChannelRequest) => {
     return await axiosClient.get<StreamChannelResponse>("/streamers/channel", { params: credentials });
   },
+
+  // Tạo Streamer mới
+  createStreamer: async (credentials: CreateStreamerChannelRequest) => {
+    return await axiosClient.post<CreateStreamerChannelRespone>("/streamers/create", credentials);
+  },
+
 };

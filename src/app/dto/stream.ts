@@ -17,3 +17,17 @@ export interface StreamChannelResponse {
         name?: string;
     };
     }
+
+export interface CreateStreamerChannelRequest{
+  email? : string;
+  streamerName? : string;
+}
+
+export interface CreateStreamerChannelRespone{
+  success: boolean;
+  message: string;
+    data: {
+        streamerName?: string;
+        streamKey?: string;
+    };
+}
