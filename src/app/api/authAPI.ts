@@ -4,6 +4,7 @@ import { LoginCredentials, LoginResponse } from '../dto/login';
 import { RegisterCredentials, RegisterResponse } from '../dto/register';
 import axiosClient from "./axiosClients";
 import { StreamChannelRequest , StreamChannelResponse, CreateStreamerChannelRequest, CreateStreamerChannelRespone } from '../dto/stream';
+import { FllowRequest, FllowResponse } from '../dto/action';
 
 // const api = axios.create({
 //   baseURL: process.env.VITE_API_URL || 'http://localhost:8080/api/v1',
@@ -46,5 +47,21 @@ export const streamApi = {
   createStreamer: async (credentials: CreateStreamerChannelRequest) => {
     return await axiosClient.post<CreateStreamerChannelRespone>("/streamers/create", credentials);
   },
+
+
+
+};  export const actionsApi = {
+
+  like: async (postId: string) => {
+    return await axiosClient.post(`/posts/${postId}/like`);
+  },
+
+  share: async (postId: string) => {
+    return await axiosClient.post(`/posts/${postId}/share`);
+  },
+
+  follow: async (credentials: FllowRequest) => {
+    return await axiosClient.post<FllowResponse>(`/user/actions/subscribe`, credentials);
+  }
 
 };
