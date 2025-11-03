@@ -1,10 +1,39 @@
 
 import { Heart, Share2, UserPlus } from 'lucide-react';
 import { useState } from 'react';
-
+import cookies from 'js-cookies';
+import { actionsApi } from '../../api/authAPI';
+import { FllowRequest } from '../../dto/action';
+import { useParams } from "react-router-dom";
+import { UserModel } from '../../model/user';
 export default function ActionButtons() {
   const [liked, setLiked] = useState(false);
   const [following, setFollowing] = useState(false);
+ const { channelName } = useParams<{ channelName: string }>();
+  const hanleFollow = async () => {
+
+    // check user was logged in
+    // if not redirect to login page
+  const dataUserString = cookies.getItem('userData');
+  const dataUser: UserModel | null = dataUserString ? JSON.parse(dataUserString) : null;
+    if (!dataUser) {
+      window.location.href = '/login';
+      return;
+    }
+    // do the follow action
+    const credentials : FllowRequest = {
+      subscriberName:channelName ,
+      subscribedToEmail:  dataUser.email // replace with actual streamer email
+    };
+   await actionsApi.follow(credentials).then((res) => {
+      console.log('Follow response:', res.data);
+    setFollowing(true);
+      
+    }).catch((err) => {
+      console.error('Follow error:', err);
+    });
+
+  };
 
   return (
     <div className="flex items-center space-x-3">
@@ -27,7 +56,7 @@ export default function ActionButtons() {
 
       {/* Follow */}
       <button
-        onClick={() => setFollowing((v) => !v)}
+        onClick={hanleFollow}
         className={`flex items-center space-x-2 px-4 py-2 rounded-lg transition ${
           following ? 'bg-purple-600 hover:bg-purple-700' : 'bg-gray-800 hover:bg-gray-700'
         }`}
