@@ -26,7 +26,7 @@ const RegisterSocial = () => (
 
     <p className="text-center text-xs text-gray-500 mt-6">
       Already have an account?{" "}
-      <a href="#" className="text-purple-400 hover:text-purple-300">
+      <a href="/login" className="text-purple-400 hover:text-purple-300">
         Sign in
       </a>
     </p>
