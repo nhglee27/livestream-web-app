@@ -5,6 +5,7 @@ import { motion } from "framer-motion";
 import { streamApi } from "../../api/authAPI";
 // @ts-ignore
 import cookies from 'js-cookies';
+import toast from "react-hot-toast";
 
 const GoLiveModal = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -75,7 +76,7 @@ const GoLiveModal = () => {
   const copyStreamKey = () => {
     if (createdChannel?.streamKey) {
       navigator.clipboard.writeText(createdChannel.streamKey);
-      alert("Stream key copied to clipboard!");
+      toast("Stream key copied to clipboard!");
     }
   }
 
@@ -138,7 +139,8 @@ const GoLiveModal = () => {
               <>
                 <h2 className="text-xl font-semibold text-white">Streamer Created!</h2>
                 <p className="text-gray-300">Channel: {createdChannel.streamerName}</p>
-                <p className="text-gray-300">Stream Key: {createdChannel.streamKey}</p>
+                <p className="text-gray-300 truncate max-w-full" title={createdChannel.streamKey}>  Stream Key: <span className="font-mono">{createdChannel.streamKey}</span></p>
+
                 <button
                   onClick={copyStreamKey}
                   className="px-4 py-2 rounded-lg bg-green-500 text-white hover:bg-green-600 transition"
