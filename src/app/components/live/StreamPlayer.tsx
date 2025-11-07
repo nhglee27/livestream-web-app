@@ -3,6 +3,7 @@
 import Hls from 'hls.js';
 import { PlayCircle } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
+import toast from 'react-hot-toast';
 
 interface StreamPlayerProps {
   /** HLS .m3u8 URL */
@@ -33,6 +34,7 @@ export default function StreamPlayer({ src, poster }: StreamPlayerProps) {
       hls.on(Hls.Events.MANIFEST_PARSED, () => setIsLoading(false));
       hls.on(Hls.Events.ERROR, (_, data) => {
         console.error('HLS error', data);
+        toast.error('Failed to load stream');
         setError('Failed to load stream');
       });
 
@@ -41,7 +43,9 @@ export default function StreamPlayer({ src, poster }: StreamPlayerProps) {
       // Safari native HLS
       video.src = src;
       video.addEventListener('loadedmetadata', () => setIsLoading(false));
+      toast.error('Failed to load stream');
     } else {
+      toast.error('Browser does not support HLS');
       setError('Browser does not support HLS');
     }
   }, [src]);
