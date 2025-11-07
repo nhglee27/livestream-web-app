@@ -66,11 +66,11 @@ export default function About() {
           transition={{ duration: 0.6 }}
           className="text-5xl font-bold bg-gradient-to-r from-purple-400 to-cyan-400 bg-clip-text text-transparent mb-6"
         >
-          About LiveSphere
+          About HaloKastStream
         </motion.h1>
 
         <p className="text-gray-400 text-lg mb-12">
-          LiveSphere is the next-generation livestream platform built for
+          HaloKastStream is the next-generation livestream platform built for
           creators, gamers, and communities. We combine cutting-edge streaming
           technology with AI-driven insights to deliver an interactive and
           seamless experience for everyone.
