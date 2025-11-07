@@ -62,6 +62,8 @@ export const streamApi = {
 
   follow: async (credentials: FllowRequest) => {
     return await axiosClient.post<FllowResponse>(`/user/actions/subscribe`, credentials);
+  },
+  unfollow: async (credentials: FllowRequest) => {
+    return await axiosClient.delete<FllowResponse>(`/user/actions/unsubscribe`, { data: credentials });
   }
-
 };
