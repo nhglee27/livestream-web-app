@@ -8,12 +8,12 @@ import { motion } from 'framer-motion';
       className="inline-block"
     >
       <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-gradient-to-r from-purple-500 to-cyan-500 flex items-center justify-center">
-        <span className="text-2xl">L.S</span>
+        <span className="text-2xl">H.K.S</span>
       </div>
     </motion.div>
 
     <h1 className="text-2xl font-bold bg-gradient-to-r from-purple-400 to-cyan-400 bg-clip-text text-transparent">
-      Live Stream Web App
+     HaloKastStream
     </h1>
     <p className="text-gray-400 text-sm mt-1">Entertaiment and Connect Space</p>
   </div>

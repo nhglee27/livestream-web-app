@@ -1,5 +1,6 @@
 import Hls from 'hls.js';
 import { useEffect, useRef, useState } from 'react';
+import toast from 'react-hot-toast';
 
 interface StreamPlayerProps {
   src: string;
@@ -21,6 +22,7 @@ export default function StreamPlayer({ src, poster }: StreamPlayerProps) {
       hls.loadSource(src);
       hls.attachMedia(video);
       hls.on(Hls.Events.MANIFEST_PARSED, () => setReady(true));
+      toast.success('Stream is ready to play');
     } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
       video.src = src;
       video.addEventListener('loadedmetadata', () => setReady(true));

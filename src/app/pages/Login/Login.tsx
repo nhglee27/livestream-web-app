@@ -7,6 +7,7 @@ import { LoginCredentials , LoginResponse } from '../../dto/login';
 // @ts-ignore
 import cookies from 'js-cookies';
 import { UserModel } from '../../model/user';
+import toast from 'react-hot-toast';
 const Login = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -29,21 +30,20 @@ const Login = () => {
           email: response.data.data.email,
           name: response.data.data.name,
         };
-
+        toast.success(response.data.message || '🎉 Login successful!');
         cookies.setItem('userData', JSON.stringify(userData));
         setShowConfetti(true);
         setTimeout(() => setShowConfetti(false), 5000);
-        navigate('/');
-
-
         
+        navigate('/');
         }
       })
       .catch((error) => {
-        console.error('Login failed:', error);
+        toast.error(error.response?.data.message || '🎉 Login failed!');
       })
       .finally(() => {
         setLoading(false);
+        // toast.error('Something went wrong. Please try again.');
       });
 
   };
