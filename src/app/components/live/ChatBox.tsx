@@ -6,6 +6,8 @@ import { Client } from '@stomp/stompjs';
 import SockJS from 'sockjs-client';
 import cookies from 'js-cookies';
 import { UserModel } from '../../model/user';
+import toast from "react-hot-toast";
+import { useNavigate } from 'react-router-dom';
 
 interface Message {
   id?: string;
@@ -13,6 +15,8 @@ interface Message {
   content: string;
   timestamp: number;
   channelName: string;
+  score?: number;
+  label?: string;
 }
 
 interface ChatBoxProps {
@@ -25,6 +29,7 @@ export default function ChatBox({ channelName }: ChatBoxProps) {
   const [isConnected, setIsConnected] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const clientRef = useRef<Client | null>(null);
+  const navigate = useNavigate();
 
   // Get sender info from cookies
   const userData = cookies.getItem('userData');
@@ -57,6 +62,14 @@ export default function ChatBox({ channelName }: ChatBoxProps) {
   // Handle send form
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    // if userData not found, prevent sending message and naviagte to login page
+    if (!userData) {
+      toast.error('Please login to send messages.');
+      navigate('/login');
+      return;
+    }
+
+
     if (input.trim()) {
       sendMessage(input);
       setInput('');
@@ -73,7 +86,7 @@ export default function ChatBox({ channelName }: ChatBoxProps) {
       heartbeatOutgoing: 4000,
 
       onConnect: () => {
-        console.log('✅ STOMP connected');
+        toast.success('✅ Connected to chat server');
         setIsConnected(true);
 
         // Subscribe to channel
@@ -81,29 +94,37 @@ export default function ChatBox({ channelName }: ChatBoxProps) {
           `/topic/messages/${channelName}`,
           (msg) => {
             try {
+
               const received: Message = JSON.parse(msg.body);
-              if (received.channelName === channelName) {
-                setMessages((prev) => [...prev, received]);
+             
+
+              if(received.score === 0 && received.channelName === channelName) {
+                    setMessages((prev) => [...prev, received]);
               }
+
+              if(received.score === 1 && received.channelName === channelName) {
+                toast.error(`Message not allowed!!!`);
+              }
+
             } catch (err) {
-              console.error('Failed to parse message:', err);
+              toast.error('Received message was failed to parse.');
             }
           }
         );
 
         // Announce join (optional)
-        sendMessage(`${sender} joined the chat`);
+        sendMessage(`${sender} joined the chat`); 
 
         // Cleanup on unmount
         return () => subscription.unsubscribe();
       },
 
       onStompError: (frame) => {
-        console.error('❌ STOMP error:', frame);
+        console.error('Broker reported error: ' + frame.headers['message']);
       },
 
       onDisconnect: () => {
-        console.log('⚠️ STOMP disconnected');
+        console.log('STOMP client disconnected');
         setIsConnected(false);
       },
     });
@@ -114,12 +135,11 @@ export default function ChatBox({ channelName }: ChatBoxProps) {
     return () => {
       if (clientRef.current) {
         clientRef.current.deactivate();
-        console.log('Client deactivated');
+console.log('STOMP client deactivated');        
       }
     };
   }, [channelName]);
 
-  console.log('Messages:', messages);
 
   // Auto-scroll when messages change
   useEffect(() => {
