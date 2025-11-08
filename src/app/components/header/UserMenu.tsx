@@ -12,6 +12,13 @@ const UserMenu = ({ user }: { user: UserModel | null }) => {
     // ✅ Clear cookies
     Cookies.removeItem("userData");
 
+    // ✅ 2. Clear localStorage
+    localStorage.clear();
+
+    // ✅ 3. Clear sessionStorage
+    sessionStorage.clear();
+
+
     // ✅ Navigate home
     navigate("/");
 

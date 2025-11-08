@@ -1,47 +1,63 @@
-
 import { Heart, Share2, UserCheck, UserPlus } from 'lucide-react';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import cookies from 'js-cookies';
 import { actionsApi } from '../../api/authAPI';
 import { FllowRequest } from '../../dto/action';
 import { useParams } from "react-router-dom";
 import { UserModel } from '../../model/user';
 import toast from 'react-hot-toast';
+
 export default function ActionButtons() {
-  const [liked, setLiked] = useState(false);
-  const [following, setFollowing] = useState(false);
- const { channelName } = useParams<{ channelName: string }>();
+  const { channelName } = useParams<{ channelName: string }>();
+
+  // Initialize from localStorage
+  const [liked, setLiked] = useState(() => {
+    const saved = localStorage.getItem(`liked_${channelName}`);
+    return saved ? JSON.parse(saved) : false;
+  });
+
+  const [following, setFollowing] = useState(() => {
+    const saved = localStorage.getItem(`following_${channelName}`);
+    return saved ? JSON.parse(saved) : false;
+  });
+
+  // Persist liked/following when they change
+  useEffect(() => {
+    localStorage.setItem(`liked_${channelName}`, JSON.stringify(liked));
+  }, [liked, channelName]);
+
+  useEffect(() => {
+    localStorage.setItem(`following_${channelName}`, JSON.stringify(following));
+  }, [following, channelName]);
 
   const handleFollow = async () => {
-    // check user was logged in
-    // if not redirect to login page
-  const dataUserString = cookies.getItem('userData');
-  const dataUser: UserModel | null = dataUserString ? JSON.parse(dataUserString) : null;
+    const dataUserString = cookies.getItem('userData');
+    const dataUser: UserModel | null = dataUserString ? JSON.parse(dataUserString) : null;
+
     if (!dataUser) {
       window.location.href = '/login';
       return;
     }
-     // do the follow action
-    const credentials : FllowRequest = {
-      subscriberName:channelName ,
-      subscribedToEmail:  dataUser.email // replace with actual streamer email
-    };
-    if(following){
-      // unfollow
-      await actionsApi.unfollow(credentials).then((res) => {
-        setFollowing(false);
-      }).catch((err) => {
-        toast.error('Failed to unfollow the streamer');
-      });
-    } else {
 
-      await actionsApi.follow(credentials).then((res) => {
-        setFollowing(true);
-      }).catch((err) => {
-        toast.error('Failed to follow the streamer');
-      });
+    const credentials: FllowRequest = {
+      subscriberName: channelName,
+      subscribedToEmail: dataUser.email
+    };
+
+    if (following) {
+      await actionsApi.unfollow(credentials)
+        .then(() => {
+          setFollowing(false);
+        })
+        .catch(() => toast.error('Failed to unfollow the streamer'));
+    } else {
+      await actionsApi.follow(credentials)
+        .then(() => {
+          setFollowing(true);
+        })
+        .catch(() => toast.error('Failed to follow the streamer'));
     }
-   }
+  };
 
   return (
     <div className="flex items-center space-x-3">

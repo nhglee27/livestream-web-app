@@ -6,6 +6,8 @@ import { Client } from '@stomp/stompjs';
 import SockJS from 'sockjs-client';
 import cookies from 'js-cookies';
 import { UserModel } from '../../model/user';
+
+import { useNavigate } from 'react-router-dom';
 import { filterCmt } from '../../api/authAPI';
 import toast from "react-hot-toast";
 
@@ -13,8 +15,9 @@ interface Message {
   id?: string;
   sender: string;
   content: string;
-  timestamp: number;
   channelName: string;
+  score?: number;
+  label?: string;
 }
 
 interface ChatBoxProps {
@@ -29,6 +32,7 @@ export default function ChatBox({ channelName }: ChatBoxProps) {
   const [isChecking, setIsChecking] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const clientRef = useRef<Client | null>(null);
+  const navigate = useNavigate();
 
   // Get sender info from cookies
   const userData = cookies.getItem('userData');
@@ -48,7 +52,6 @@ export default function ChatBox({ channelName }: ChatBoxProps) {
       sender,
       content,
       channelName,
-      timestamp: Date.now(),
     };
 
     clientRef.current.publish({
@@ -61,34 +64,47 @@ export default function ChatBox({ channelName }: ChatBoxProps) {
   // Handle send form
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    const contentToSubmit = input.trim();
+// <<<<<<< HEAD
+    // if userData not found, prevent sending message and naviagte to login page
+    if (!userData) {
+      toast.error('Please login to send messages.');
+      navigate('/login');
+      return;
+    }
+
+    if (input.trim()) {
+      sendMessage(input);
+      setInput('');
+// =======
+//     const contentToSubmit = input.trim();
     
-    // Không gửi nếu rỗng, đang kết nối, hoặc đang kiểm tra
-    if (!contentToSubmit || !isConnected || isChecking) return;
+//     // Không gửi nếu rỗng, đang kết nối, hoặc đang kiểm tra
+//     if (!contentToSubmit || !isConnected || isChecking) return;
 
-    setIsChecking(true); // Bật trạng thái "đang kiểm tra"
+//     setIsChecking(true); // Bật trạng thái "đang kiểm tra"
 
-    try {
-      // Gọi API để kiểm tra
-      const response = await filterCmt.checkCmt({ text: contentToSubmit });
+//     try {
+//       // Gọi API để kiểm tra
+//       const response = await filterCmt.checkCmt({ text: contentToSubmit });
 
-      // Kiểm tra nhãn trả về
-      if (response.data.label === 'NOT TOXIC') {
-        // Chỉ gửi nếu "NOT TOXIC"
-        sendMessage(contentToSubmit);
-        setInput('');
-      } else {
-        // Nếu "TOXIC", không gửi và thông báo
-        console.warn('Toxic message blocked:', contentToSubmit);
-        toast('Tin nhắn của bạn bị cấm vì chứa nội dung độc hại.');
-        setInput(''); // Xóa tin nhắn độc hại
-      }
-    } catch (err) {
-      console.error('API check failed:', err);
-      // Có thể cho phép gửi nếu API lỗi, hoặc thông báo lỗi
-      toast('Không thể kiểm tra tin nhắn. Vui lòng thử lại.');
-    } finally {
-      setIsChecking(false); // Tắt trạng thái "đang kiểm tra"
+//       // Kiểm tra nhãn trả về
+//       if (response.data.label === 'NOT TOXIC') {
+//         // Chỉ gửi nếu "NOT TOXIC"
+//         sendMessage(contentToSubmit);
+//         setInput('');
+//       } else {
+//         // Nếu "TOXIC", không gửi và thông báo
+//         console.warn('Toxic message blocked:', contentToSubmit);
+//         toast('Tin nhắn của bạn bị cấm vì chứa nội dung độc hại.');
+//         setInput(''); // Xóa tin nhắn độc hại
+//       }
+//     } catch (err) {
+//       console.error('API check failed:', err);
+//       // Có thể cho phép gửi nếu API lỗi, hoặc thông báo lỗi
+//       toast('Không thể kiểm tra tin nhắn. Vui lòng thử lại.');
+//     } finally {
+//       setIsChecking(false); // Tắt trạng thái "đang kiểm tra"
+// >>>>>>> main
     }
   };
 
@@ -102,7 +118,7 @@ export default function ChatBox({ channelName }: ChatBoxProps) {
       heartbeatOutgoing: 4000,
 
       onConnect: () => {
-        console.log('✅ STOMP connected');
+        toast.success('✅ Connected to chat server');
         setIsConnected(true);
 
         // Subscribe to channel
@@ -110,29 +126,68 @@ export default function ChatBox({ channelName }: ChatBoxProps) {
           `/topic/messages/${channelName}`,
           (msg) => {
             try {
+
               const received: Message = JSON.parse(msg.body);
-              if (received.channelName === channelName) {
-                setMessages((prev) => [...prev, received]);
+             
+
+              if(received.score === 0 && received.channelName === channelName) {
+                    setMessages((prev) => [...prev, received]);
               }
+
+              if(received.score === 1 && received.channelName === channelName) {
+                // throw a warning message with rectangle yellow and the '!' in inside with the warm message by using toast
+                toast.custom(
+                  (t) => (
+                    <div
+                      className={`${
+                        t.visible ? 'animate-enter' : 'animate-leave'
+                      } max-w-md w-full bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700 p-4 shadow-lg`}
+                      role="alert"
+                    >
+                      <div className="flex">
+                        <div className="py-1">
+                          <svg
+                            className="fill-current h-6 w-6 text-yellow-500 mr-4"
+                            xmlns="http://www.w3.org/2000/svg"
+                            viewBox="0 0 20 20"
+                          >
+                            <path d="M10 15a1.5 1.5 0 100-3 1.5 1.5 0 000 3zm-.75-7V4.5a.75.75 0 011.5 0V8a.75.75 0 01-1.5 0z" />
+                          </svg>
+                        </div>
+                        <div>
+                          <p className="font-bold">Warning</p>
+                          <p className="text-sm">
+                            Your message was flagged as potentially toxic
+                            and was not sent.
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  ),
+                  { duration: 1000 }
+                );
+
+              }
+
             } catch (err) {
-              console.error('Failed to parse message:', err);
+              toast.error('Cannot check message content, please try again.');
             }
           }
         );
 
         // Announce join (optional)
-        sendMessage(`${sender} joined the chat`);
+        sendMessage(`${sender} joined the chat`); 
 
         // Cleanup on unmount
         return () => subscription.unsubscribe();
       },
 
       onStompError: (frame) => {
-        console.error('❌ STOMP error:', frame);
+        console.error('Broker reported error: ' + frame.headers['message']);
       },
 
       onDisconnect: () => {
-        console.log('⚠️ STOMP disconnected');
+        console.log('STOMP client disconnected');
         setIsConnected(false);
       },
     });
@@ -143,12 +198,11 @@ export default function ChatBox({ channelName }: ChatBoxProps) {
     return () => {
       if (clientRef.current) {
         clientRef.current.deactivate();
-        console.log('Client deactivated');
+console.log('STOMP client deactivated');        
       }
     };
   }, [channelName]);
 
-  console.log('Messages:', messages);
 
   // Auto-scroll when messages change
   useEffect(() => {
