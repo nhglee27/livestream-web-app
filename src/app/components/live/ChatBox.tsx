@@ -1,11 +1,13 @@
 'use client';
 
-import { MessageSquare } from 'lucide-react';
+import { MessageSquare, User } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { Client } from '@stomp/stompjs';
 import SockJS from 'sockjs-client';
 import cookies from 'js-cookies';
 import { UserModel } from '../../model/user';
+import { filterCmt } from '../../api/authAPI';
+import toast from "react-hot-toast";
 
 interface Message {
   id?: string;
@@ -23,6 +25,8 @@ export default function ChatBox({ channelName }: ChatBoxProps) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [isConnected, setIsConnected] = useState(false);
+  // check cmt
+  const [isChecking, setIsChecking] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const clientRef = useRef<Client | null>(null);
 
@@ -55,11 +59,36 @@ export default function ChatBox({ channelName }: ChatBoxProps) {
   };
 
   // Handle send form
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    if (input.trim()) {
-      sendMessage(input);
-      setInput('');
+    const contentToSubmit = input.trim();
+    
+    // Không gửi nếu rỗng, đang kết nối, hoặc đang kiểm tra
+    if (!contentToSubmit || !isConnected || isChecking) return;
+
+    setIsChecking(true); // Bật trạng thái "đang kiểm tra"
+
+    try {
+      // Gọi API để kiểm tra
+      const response = await filterCmt.checkCmt({ text: contentToSubmit });
+
+      // Kiểm tra nhãn trả về
+      if (response.data.label === 'NOT TOXIC') {
+        // Chỉ gửi nếu "NOT TOXIC"
+        sendMessage(contentToSubmit);
+        setInput('');
+      } else {
+        // Nếu "TOXIC", không gửi và thông báo
+        console.warn('Toxic message blocked:', contentToSubmit);
+        toast('Tin nhắn của bạn bị cấm vì chứa nội dung độc hại.');
+        setInput(''); // Xóa tin nhắn độc hại
+      }
+    } catch (err) {
+      console.error('API check failed:', err);
+      // Có thể cho phép gửi nếu API lỗi, hoặc thông báo lỗi
+      toast('Không thể kiểm tra tin nhắn. Vui lòng thử lại.');
+    } finally {
+      setIsChecking(false); // Tắt trạng thái "đang kiểm tra"
     }
   };
 
@@ -123,8 +152,11 @@ export default function ChatBox({ channelName }: ChatBoxProps) {
 
   // Auto-scroll when messages change
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages]);
+    messagesEndRef.current?.scrollIntoView({
+    behavior: 'smooth',
+    block: 'nearest'
+  });
+}, [messages]);
 
   return (
    <div className="flex flex-col h-full bg-gradient-to-b from-gray-900 via-gray-950 to-black text-white rounded-2xl shadow-2xl overflow-hidden">
@@ -186,27 +218,31 @@ export default function ChatBox({ channelName }: ChatBoxProps) {
 
   {/* Input */}
   <form
-    onSubmit={handleSubmit}
-    className="p-4 border-t border-gray-800 bg-gray-900/70 backdrop-blur-md"
-  >
-    <div className="flex items-center gap-3">
-      <input
-        type="text"
-        value={input}
-        onChange={(e) => setInput(e.target.value)}
-        placeholder={isConnected ? 'Type a message...' : 'Connecting...'}
-        disabled={!isConnected}
-        className="flex-1 px-4 py-2.5 bg-gray-800/80 text-white rounded-full focus:outline-none focus:ring-2 focus:ring-purple-500 disabled:opacity-50 placeholder-gray-500 transition"
-      />
-      <button
-        type="submit"
-        disabled={!isConnected || !input.trim()}
-        className="px-4 py-2 rounded-full bg-purple-600 hover:bg-purple-700 active:scale-95 transition text-sm font-semibold shadow-lg disabled:opacity-40 disabled:cursor-not-allowed"
+        onSubmit={handleSubmit}
+        className="p-4 border-t border-gray-800 bg-gray-900/70 backdrop-blur-md"
       >
-        Send
-      </button>
+        <div className="flex items-center gap-3">
+          <input
+            type="text"
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            placeholder={
+              !isConnected ? 'Connecting...' 
+              : isChecking ? 'Checking message...' 
+              : 'Type a message...'
+            }
+            disabled={!isConnected || isChecking} // Disable khi đang check
+            className="flex-1 px-4 py-2.5 bg-gray-800/80 text-white rounded-full focus:outline-none focus:ring-2 focus:ring-purple-500 disabled:opacity-50 placeholder-gray-500 transition"
+          />
+          <button
+            type="submit" // Đổi thành "submit" để nhấn Enter cũng gửi được
+            disabled={!isConnected || !input.trim() || isChecking} // Disable khi đang check
+            className="px-4 py-2 rounded-full bg-purple-600 hover:bg-purple-700 active:scale-95 transition text-sm font-semibold shadow-lg disabled:opacity-40 disabled:cursor-not-allowed"
+          >
+            {isChecking ? '...' : 'Send'} {/* Thay đổi text nút */}
+          </button>
+        </div>
+      </form>
     </div>
-  </form>
-</div>
   );
 }
