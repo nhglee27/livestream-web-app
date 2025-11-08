@@ -1,19 +1,20 @@
 'use client';
 
-import { MessageSquare } from 'lucide-react';
+import { MessageSquare, User } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { Client } from '@stomp/stompjs';
 import SockJS from 'sockjs-client';
 import cookies from 'js-cookies';
 import { UserModel } from '../../model/user';
-import toast from "react-hot-toast";
+
 import { useNavigate } from 'react-router-dom';
+import { filterCmt } from '../../api/authAPI';
+import toast from "react-hot-toast";
 
 interface Message {
   id?: string;
   sender: string;
   content: string;
-  timestamp: number;
   channelName: string;
   score?: number;
   label?: string;
@@ -27,6 +28,8 @@ export default function ChatBox({ channelName }: ChatBoxProps) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [isConnected, setIsConnected] = useState(false);
+  // check cmt
+  const [isChecking, setIsChecking] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const clientRef = useRef<Client | null>(null);
   const navigate = useNavigate();
@@ -49,7 +52,6 @@ export default function ChatBox({ channelName }: ChatBoxProps) {
       sender,
       content,
       channelName,
-      timestamp: Date.now(),
     };
 
     clientRef.current.publish({
@@ -60,8 +62,9 @@ export default function ChatBox({ channelName }: ChatBoxProps) {
   };
 
   // Handle send form
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+// <<<<<<< HEAD
     // if userData not found, prevent sending message and naviagte to login page
     if (!userData) {
       toast.error('Please login to send messages.');
@@ -69,10 +72,39 @@ export default function ChatBox({ channelName }: ChatBoxProps) {
       return;
     }
 
-
     if (input.trim()) {
       sendMessage(input);
       setInput('');
+// =======
+//     const contentToSubmit = input.trim();
+    
+//     // Không gửi nếu rỗng, đang kết nối, hoặc đang kiểm tra
+//     if (!contentToSubmit || !isConnected || isChecking) return;
+
+//     setIsChecking(true); // Bật trạng thái "đang kiểm tra"
+
+//     try {
+//       // Gọi API để kiểm tra
+//       const response = await filterCmt.checkCmt({ text: contentToSubmit });
+
+//       // Kiểm tra nhãn trả về
+//       if (response.data.label === 'NOT TOXIC') {
+//         // Chỉ gửi nếu "NOT TOXIC"
+//         sendMessage(contentToSubmit);
+//         setInput('');
+//       } else {
+//         // Nếu "TOXIC", không gửi và thông báo
+//         console.warn('Toxic message blocked:', contentToSubmit);
+//         toast('Tin nhắn của bạn bị cấm vì chứa nội dung độc hại.');
+//         setInput(''); // Xóa tin nhắn độc hại
+//       }
+//     } catch (err) {
+//       console.error('API check failed:', err);
+//       // Có thể cho phép gửi nếu API lỗi, hoặc thông báo lỗi
+//       toast('Không thể kiểm tra tin nhắn. Vui lòng thử lại.');
+//     } finally {
+//       setIsChecking(false); // Tắt trạng thái "đang kiểm tra"
+// >>>>>>> main
     }
   };
 
@@ -103,11 +135,42 @@ export default function ChatBox({ channelName }: ChatBoxProps) {
               }
 
               if(received.score === 1 && received.channelName === channelName) {
-                toast.error(`Message not allowed!!!`);
+                // throw a warning message with rectangle yellow and the '!' in inside with the warm message by using toast
+                toast.custom(
+                  (t) => (
+                    <div
+                      className={`${
+                        t.visible ? 'animate-enter' : 'animate-leave'
+                      } max-w-md w-full bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700 p-4 shadow-lg`}
+                      role="alert"
+                    >
+                      <div className="flex">
+                        <div className="py-1">
+                          <svg
+                            className="fill-current h-6 w-6 text-yellow-500 mr-4"
+                            xmlns="http://www.w3.org/2000/svg"
+                            viewBox="0 0 20 20"
+                          >
+                            <path d="M10 15a1.5 1.5 0 100-3 1.5 1.5 0 000 3zm-.75-7V4.5a.75.75 0 011.5 0V8a.75.75 0 01-1.5 0z" />
+                          </svg>
+                        </div>
+                        <div>
+                          <p className="font-bold">Warning</p>
+                          <p className="text-sm">
+                            Your message was flagged as potentially toxic
+                            and was not sent.
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  ),
+                  { duration: 1000 }
+                );
+
               }
 
             } catch (err) {
-              toast.error('Received message was failed to parse.');
+              toast.error('Cannot check message content, please try again.');
             }
           }
         );
@@ -143,8 +206,11 @@ console.log('STOMP client deactivated');
 
   // Auto-scroll when messages change
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages]);
+    messagesEndRef.current?.scrollIntoView({
+    behavior: 'smooth',
+    block: 'nearest'
+  });
+}, [messages]);
 
   return (
    <div className="flex flex-col h-full bg-gradient-to-b from-gray-900 via-gray-950 to-black text-white rounded-2xl shadow-2xl overflow-hidden">
@@ -206,27 +272,31 @@ console.log('STOMP client deactivated');
 
   {/* Input */}
   <form
-    onSubmit={handleSubmit}
-    className="p-4 border-t border-gray-800 bg-gray-900/70 backdrop-blur-md"
-  >
-    <div className="flex items-center gap-3">
-      <input
-        type="text"
-        value={input}
-        onChange={(e) => setInput(e.target.value)}
-        placeholder={isConnected ? 'Type a message...' : 'Connecting...'}
-        disabled={!isConnected}
-        className="flex-1 px-4 py-2.5 bg-gray-800/80 text-white rounded-full focus:outline-none focus:ring-2 focus:ring-purple-500 disabled:opacity-50 placeholder-gray-500 transition"
-      />
-      <button
-        type="submit"
-        disabled={!isConnected || !input.trim()}
-        className="px-4 py-2 rounded-full bg-purple-600 hover:bg-purple-700 active:scale-95 transition text-sm font-semibold shadow-lg disabled:opacity-40 disabled:cursor-not-allowed"
+        onSubmit={handleSubmit}
+        className="p-4 border-t border-gray-800 bg-gray-900/70 backdrop-blur-md"
       >
-        Send
-      </button>
+        <div className="flex items-center gap-3">
+          <input
+            type="text"
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            placeholder={
+              !isConnected ? 'Connecting...' 
+              : isChecking ? 'Checking message...' 
+              : 'Type a message...'
+            }
+            disabled={!isConnected || isChecking} // Disable khi đang check
+            className="flex-1 px-4 py-2.5 bg-gray-800/80 text-white rounded-full focus:outline-none focus:ring-2 focus:ring-purple-500 disabled:opacity-50 placeholder-gray-500 transition"
+          />
+          <button
+            type="submit" // Đổi thành "submit" để nhấn Enter cũng gửi được
+            disabled={!isConnected || !input.trim() || isChecking} // Disable khi đang check
+            className="px-4 py-2 rounded-full bg-purple-600 hover:bg-purple-700 active:scale-95 transition text-sm font-semibold shadow-lg disabled:opacity-40 disabled:cursor-not-allowed"
+          >
+            {isChecking ? '...' : 'Send'} {/* Thay đổi text nút */}
+          </button>
+        </div>
+      </form>
     </div>
-  </form>
-</div>
   );
 }

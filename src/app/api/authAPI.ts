@@ -5,6 +5,7 @@ import { RegisterCredentials, RegisterResponse } from '../dto/register';
 import axiosClient from "./axiosClients";
 import { StreamChannelRequest , StreamChannelResponse, CreateStreamerChannelRequest, CreateStreamerChannelRespone } from '../dto/stream';
 import { FllowRequest, FllowResponse } from '../dto/action';
+import { UserComment, UserCommentRespone } from '../dto/cmt';
 
 // const api = axios.create({
 //   baseURL: process.env.VITE_API_URL || 'http://localhost:8080/api/v1',
@@ -34,7 +35,12 @@ export const authApi = {
   }
 
 };
-
+export const filterCmt = {
+  checkCmt: async (credentials: UserComment) => {
+    // gửi trực tiếp object credentials
+    return await axiosClient.post<UserCommentRespone>("/predict", credentials);
+  }
+}
 
 
 export const streamApi = {
