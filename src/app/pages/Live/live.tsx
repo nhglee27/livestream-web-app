@@ -1,8 +1,7 @@
-
-import { log } from 'console';
 import { ActionButtons, ChatBox, RelatedChannels, StreamInfo } from '../../components/live';
 import StreamPlayer from '../../components/live/StreamPlayer';
 import { useParams } from 'react-router-dom';
+
 const mockRelated = [
   {
     id: '1',
@@ -38,37 +37,41 @@ const mockRelated = [
 
 
 export default function LiveStreamPage() {
-  const { channelName } = useParams();
+  const { channelName } = useParams();
 
-  return (
-    <div className="min-h-screen bg-black text-white">
-      <div className="flex flex-col lg:flex-row">
-        <div className="flex-1 lg:w-3/4">
-          <StreamPlayer
-            src={`http://localhost:8000/live/${channelName}/index.m3u8`}
-            poster="/placeholder-poster.jpg"
-          />
+  // trỏ đến PORT CỦA PROXY (8001)
+  return (
+    <div className="min-h-screen bg-black text-white">
+      <div className="flex flex-col lg:flex-row">
+        <div className="flex-1 lg:w-3/4">
 
-          <StreamInfo
-            title="Stardew Valley - Cozy Farm Building Stream"
-            streamer={channelName || 'Unknown Streamer'}
-            viewers={1234}
-            tags={['Stardew Valley', 'Indie', 'Chill', 'Relaxing']}
-            live
-          />
+          <StreamPlayer
+            // --- SỬA Ở ĐÂY ---
+            src={`http://localhost:8001/live/${channelName}/index.m3u8`}
+            // --- KẾT THÚC SỬA ---
+            poster="/placeholder-poster.jpg"
+          />
 
-          <div className="p-4 lg:p-6 flex justify-between items-center border-b border-gray-800">
-            <ActionButtons />
-          </div>
-        </div>
+          <StreamInfo
+            title="Stardew Valley - Cozy Farm Building Stream"
+            streamer={channelName || 'Unknown Streamer'}
+            viewers={1234}
+            tags={['Stardew Valley', 'Indie', 'Chill', 'Relaxing']}
+            live
+          />
 
-        <aside className="lg:w-1/4 border-t lg:border-t-0 lg:border-l border-gray-800 flex flex-col">
-          <div className="flex-1">
-            <ChatBox channelName={channelName || ''} />
-          </div>
-          <RelatedChannels channels={mockRelated} />
-        </aside>
-      </div>
-    </div>
-  );
+          <div className="p-4 lg:p-6 flex justify-between items-center border-b border-gray-800">
+            <ActionButtons />
+          </div>
+        </div>
+
+        <aside className="lg:w-1/4 border-t lg:border-t-0 lg:border-l border-gray-800 flex flex-col">
+          <div className="flex-1">
+            <ChatBox channelName={channelName || ''} />
+          </div>
+          <RelatedChannels channels={mockRelated} />
+        </aside>
+      </div>
+    </div>
+  );
 }
