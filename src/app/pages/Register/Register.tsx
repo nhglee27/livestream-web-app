@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import Confetti from "react-confetti";
 import toast from "react-hot-toast";
@@ -8,6 +8,7 @@ import RegisterBackground from "./RegisterBackground";
 import RegisterLogo from "./RegisterLogo";
 import RegisterForm from "./RegisterForm";
 import RegisterSocial from "./RegisterSocial";
+import cookies from "js-cookies";
 
 import { authApi } from '../../api/authAPI';
 import {RegisterCredentials, RegisterResponse} from "../../dto/register";
@@ -16,6 +17,14 @@ const Register: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [showConfetti, setShowConfetti] = useState(false);
   const navigate = useNavigate();
+
+  const userDataString = cookies.getItem('userData');
+    
+   useEffect(() => {
+    if (userDataString) {
+      navigate('/');
+    }
+  }, [ userDataString]);
 
   const handleSubmit = async (data: RegisterCredentials) => {
     try {

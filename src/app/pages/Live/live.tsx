@@ -40,6 +40,7 @@ const mockRelated = [
 export default function LiveStreamPage() {
   const { channelName } = useParams();
 
+  console.log("Streaming channel:", channelName);
   return (
     <div className="min-h-screen bg-black text-white">
       <div className="flex flex-col lg:flex-row">

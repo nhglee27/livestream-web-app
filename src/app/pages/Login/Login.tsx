@@ -1,9 +1,10 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import Confetti from 'react-confetti';
 import {Card , BackgroundShapes} from '../../components/login';
 import { authApi } from '../../api/authAPI';
 import { useNavigate } from 'react-router-dom';
 import { LoginCredentials , LoginResponse } from '../../dto/login';
+
 // @ts-ignore
 import cookies from 'js-cookies';
 import { UserModel } from '../../model/user';
@@ -15,7 +16,13 @@ const Login = () => {
   const [loading, setLoading] = useState(false);
   const [showConfetti, setShowConfetti] = useState(false);
   const navigate = useNavigate();
-
+  const userDataString = cookies.getItem('userData');
+  
+  useEffect(() => {
+    if (userDataString) {
+      navigate('/');
+    }
+  }, [ userDataString]);
 
   const handleSubmit = () => {
     setLoading(true);

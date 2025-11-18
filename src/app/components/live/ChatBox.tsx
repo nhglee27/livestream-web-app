@@ -8,8 +8,13 @@ import cookies from 'js-cookies';
 import { UserModel } from '../../model/user';
 
 import { useNavigate } from 'react-router-dom';
-import { filterCmt } from '../../api/authAPI';
+// import { filterCmt } from '../../api/authAPI';
 import toast from "react-hot-toast";
+
+import { useSelector, useDispatch } from "react-redux";
+import { addMessage } from "../../store/chatSlice";
+import { RootState } from "../../store/store";
+
 
 interface Message {
   id?: string;
@@ -25,7 +30,8 @@ interface ChatBoxProps {
 }
 
 export default function ChatBox({ channelName }: ChatBoxProps) {
-  const [messages, setMessages] = useState<Message[]>([]);
+ 
+  // const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [isConnected, setIsConnected] = useState(false);
   // check cmt
@@ -33,7 +39,12 @@ export default function ChatBox({ channelName }: ChatBoxProps) {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const clientRef = useRef<Client | null>(null);
   const navigate = useNavigate();
+ const dispatch = useDispatch();
 
+// Messages from Redux instead of useState
+const messages = useSelector(
+  (state: RootState) => state.chat.rooms[channelName] || []
+);
   // Get sender info from cookies
   const userData = cookies.getItem('userData');
   let sender: string = 'Anonymous';
@@ -43,6 +54,7 @@ export default function ChatBox({ channelName }: ChatBoxProps) {
   } catch (err) {
     console.warn('Failed to parse user cookie:', err);
   }
+
 
   // Send message
   const sendMessage = (content: string) => {
@@ -64,8 +76,6 @@ export default function ChatBox({ channelName }: ChatBoxProps) {
   // Handle send form
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-// <<<<<<< HEAD
-    // if userData not found, prevent sending message and naviagte to login page
     if (!userData) {
       toast.error('Please login to send messages.');
       navigate('/login');
@@ -75,7 +85,6 @@ export default function ChatBox({ channelName }: ChatBoxProps) {
     if (input.trim()) {
       sendMessage(input);
       setInput('');
-// =======
 //     const contentToSubmit = input.trim();
     
 //     // Không gửi nếu rỗng, đang kết nối, hoặc đang kiểm tra
@@ -104,7 +113,6 @@ export default function ChatBox({ channelName }: ChatBoxProps) {
 //       toast('Không thể kiểm tra tin nhắn. Vui lòng thử lại.');
 //     } finally {
 //       setIsChecking(false); // Tắt trạng thái "đang kiểm tra"
-// >>>>>>> main
     }
   };
 
@@ -130,9 +138,12 @@ export default function ChatBox({ channelName }: ChatBoxProps) {
               const received: Message = JSON.parse(msg.body);
              
 
-              if(received.score === 0 && received.channelName === channelName) {
-                    setMessages((prev) => [...prev, received]);
-              }
+              // if(received.score === 0 && received.channelName === channelName) {
+              //       setMessages((prev) => [...prev, received]);
+              // }
+if (received.score === 0 && received.channelName === channelName) {
+  dispatch(addMessage(received));  // SAVE to Redux persist
+}
 
               if(received.score === 1 && received.channelName === channelName) {
                 // throw a warning message with rectangle yellow and the '!' in inside with the warm message by using toast
