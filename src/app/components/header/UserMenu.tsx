@@ -13,7 +13,7 @@ const UserMenu = ({ user }: { user: UserModel | null }) => {
     Cookies.removeItem("userData");
 
     // ✅ 2. Clear localStorage
-    localStorage.clear();
+    // localStorage.clear();
 
     // ✅ 3. Clear sessionStorage
     sessionStorage.clear();

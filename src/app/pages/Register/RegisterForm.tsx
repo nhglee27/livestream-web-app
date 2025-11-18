@@ -136,7 +136,7 @@ const RegisterForm: React.FC<Props> = ({ loading, onSubmit }) => {
       <button
         type="submit"
         disabled={loading}
-        className="w-full py-3 rounded-xl bg-gradient-to-r from-purple-500 to-cyan-500 text-white font-semibold flex items-center justify-center space-x-2 disabled:opacity-70"
+        className="w-full py-3 rounded-xl bg-gradient-to-r from-purple-500 to-cyan-500 text-white font-semibold flex items-center justify-center space-x-2 disabled:opacity-70 mt-5"
       >
         {loading ? (
           <>
