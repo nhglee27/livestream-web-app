@@ -3,7 +3,9 @@
 import { MessageSquare, User } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { Client } from '@stomp/stompjs';
+// @ts-ignore
 import SockJS from 'sockjs-client';
+// @ts-ignore
 import cookies from 'js-cookies';
 import { UserModel } from '../../model/user';
 
