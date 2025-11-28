@@ -6,6 +6,7 @@ import { streamApi } from "../../api/authAPI";
 // @ts-ignore
 import cookies from 'js-cookies';
 import toast from "react-hot-toast";
+import { X } from "lucide-react"; // 1. Import icon X
 
 const GoLiveModal = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -13,7 +14,6 @@ const GoLiveModal = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-  // State để lưu thông tin streamer mới tạo
   const [createdChannel, setCreatedChannel] = useState<{
     streamerName: string;
     streamKey: string;
@@ -106,11 +106,20 @@ const GoLiveModal = () => {
             initial={{ scale: 0.8, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             exit={{ scale: 0.8, opacity: 0 }}
-            className="bg-gray-900 rounded-2xl p-6 w-80 flex flex-col gap-4 shadow-lg"
+            // 2. Thêm 'relative' vào đây để nút X định vị đúng chỗ
+            className="bg-gray-900 rounded-2xl p-6 w-80 flex flex-col gap-4 shadow-lg relative"
           >
+            {/* 3. Nút đóng (X) */}
+            <button
+              onClick={closeModal}
+              className="absolute top-3 right-3 text-gray-400 hover:text-white transition-colors p-1"
+            >
+              <X size={20} />
+            </button>
+
             {!createdChannel ? (
               <>
-                <h2 className="text-xl font-semibold text-white">Enter Channel Name</h2>
+                <h2 className="text-xl font-semibold text-white mt-2">Enter Channel Name</h2>
                 <input
                   type="text"
                   value={channelName}
@@ -137,7 +146,7 @@ const GoLiveModal = () => {
               </>
             ) : (
               <>
-                <h2 className="text-xl font-semibold text-white">Streamer Created!</h2>
+                <h2 className="text-xl font-semibold text-white mt-2">Streamer Created!</h2>
                 <p className="text-gray-300">Channel: {createdChannel.streamerName}</p>
                 <p className="text-gray-300 truncate max-w-full" title={createdChannel.streamKey}>  Stream Key: <span className="font-mono">{createdChannel.streamKey}</span></p>
 
