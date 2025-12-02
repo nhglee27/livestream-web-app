@@ -121,7 +121,6 @@ import { useState, useEffect } from "react";
 import { AnimatePresence } from "framer-motion";
 import { Menu, X } from "lucide-react";
 import { useLocation } from "react-router-dom";
-import Cookies from "js-cookies";
 import { Logo, NavMenu, UserMenu, MobileMenu } from "../../components/header";
 import { UserModel } from "../../model/user";
 
@@ -130,9 +129,9 @@ const Header: React.FC = () => {
   const [user, setUser] = useState<UserModel | null>(null);
   const location = useLocation();
 
-  // ✅ Check cookies for user info
+
   useEffect(() => {
-    const userCookie = Cookies.getItem("userData");
+    const userCookie = sessionStorage.getItem("userData");
     if (userCookie) {
       try {
         const parsed = JSON.parse(userCookie);

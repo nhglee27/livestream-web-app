@@ -3,8 +3,6 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { streamApi } from "../../api/authAPI";
-// @ts-ignore
-import cookies from 'js-cookies';
 import toast from "react-hot-toast";
 import { X } from "lucide-react"; // 1. Import icon X
 
@@ -33,7 +31,7 @@ const GoLiveModal = () => {
       return;
     }
 
-    const userDataString = cookies.getItem('userData');
+    const userDataString = sessionStorage.getItem('userData');
     let email: string | null = null;
 
     if (userDataString) {

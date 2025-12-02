@@ -1,17 +1,19 @@
-import { LogIn, LogOut, AlertTriangle } from "lucide-react";
+import { LogIn, LogOut, AlertTriangle, User, ChevronDown } from "lucide-react"; // ✅ Import thêm icon
 import { Link, useNavigate } from "react-router-dom";
 // @ts-ignore
 import Cookies from "js-cookies";
 import { UserModel } from "../../model/user";
 import { useState } from "react";
-import { createPortal } from "react-dom"; // ✅ 1. Import createPortal
+import { createPortal } from "react-dom";
 
 const UserMenu = ({ user }: { user: UserModel | null }) => {
   const navigate = useNavigate();
   const [showConfirm, setShowConfirm] = useState(false);
+  const [showMenu, setShowMenu] = useState(false); // ✅ State điều khiển menu dropdown
 
   const handleLogoutClick = () => {
-    setShowConfirm(true);
+    setShowMenu(false); // Đóng menu khi bấm logout
+    setShowConfirm(true); // Mở popup xác nhận
   };
 
   const confirmLogout = () => {
@@ -23,19 +25,57 @@ const UserMenu = ({ user }: { user: UserModel | null }) => {
 
   return (
     <>
-      {/* --- Phần nút bấm trên Menu (Giữ nguyên) --- */}
+      {/* --- Phần nút bấm trên Menu --- */}
       {user ? (
-        <div className="hidden md:flex items-center gap-3 text-white font-medium">
-          <div className="px-4 py-2 rounded-xl bg-gradient-to-r from-purple-500 to-cyan-500 shadow-md flex items-center gap-3">
-            <span>Hi, {user.name || "User"} 👋</span>
-            <button
-              onClick={handleLogoutClick}
-              className="ml-3 flex items-center gap-1 text-sm bg-white/20 hover:bg-white/30 px-2 py-1 rounded-lg transition"
-            >
-              <LogOut className="w-4 h-4" />
-              Logout
-            </button>
-          </div>
+        <div className="relative hidden md:block"> {/* ✅ Thêm relative để định vị menu con */}
+          
+          {/* Nút chính hiển thị tên User */}
+          <button 
+            onClick={() => setShowMenu(!showMenu)}
+            className="px-4 py-2 rounded-xl bg-gradient-to-r from-purple-500 to-cyan-500 shadow-md flex items-center gap-2 text-white font-medium hover:brightness-110 transition active:scale-95"
+          >
+            <span>Hi, {user.name || "User"}</span>
+            <ChevronDown className={`w-4 h-4 transition-transform duration-200 ${showMenu ? "rotate-180" : ""}`} />
+          </button>
+
+          {/* --- DROPDOWN MENU --- */}
+          {showMenu && (
+            <>
+              {/* Lớp nền trong suốt để click ra ngoài thì đóng menu */}
+              <div 
+                className="fixed inset-0 z-40" 
+                onClick={() => setShowMenu(false)}
+              ></div>
+
+              {/* Danh sách menu */}
+              <div className="absolute right-0 top-full mt-2 w-48 bg-gray-900 border border-gray-700 rounded-xl shadow-xl overflow-hidden z-50 animate-in fade-in slide-in-from-top-2 duration-200">
+                <div className="p-1">
+                  
+                  {/* Item 1: My Info */}
+                  <Link 
+                    to="/my-info" 
+                    className="flex items-center gap-2 w-full px-4 py-2.5 text-sm text-gray-300 hover:bg-gray-800 hover:text-white rounded-lg transition"
+                    onClick={() => setShowMenu(false)}
+                  >
+                    <User className="w-4 h-4 text-cyan-400" />
+                    My Info
+                  </Link>
+
+                  {/* Divider */}
+                  <div className="h-px bg-gray-700 my-1 mx-2"></div>
+
+                  {/* Item 2: Logout */}
+                  <button
+                    onClick={handleLogoutClick}
+                    className="flex items-center gap-2 w-full px-4 py-2.5 text-sm text-red-400 hover:bg-red-500/10 hover:text-red-300 rounded-lg transition"
+                  >
+                    <LogOut className="w-4 h-4" />
+                    Logout
+                  </button>
+                </div>
+              </div>
+            </>
+          )}
         </div>
       ) : (
         <Link
@@ -47,10 +87,9 @@ const UserMenu = ({ user }: { user: UserModel | null }) => {
         </Link>
       )}
 
-      {/* --- LOGOUT CONFIRMATION POPUP (Dùng Portal) --- */}
-      {showConfirm && createPortal( // ✅ 2. Bọc Modal trong createPortal
+      {/* --- LOGOUT CONFIRMATION POPUP (Giữ nguyên) --- */}
+      {showConfirm && createPortal(
         <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 h-screen w-screen">
-          
           <div 
             className="bg-gray-900 border border-gray-700 p-6 rounded-2xl shadow-2xl w-full max-w-sm flex flex-col items-center animate-in fade-in zoom-in duration-200"
             onClick={(e) => e.stopPropagation()} 
