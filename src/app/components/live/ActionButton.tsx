@@ -34,7 +34,7 @@ export default function ActionButtons() {
   }, [following, channelName]);
 
   const handleFollow = async () => {
-    const dataUserString = cookies.getItem('userData');
+    const dataUserString = sessionStorage.getItem('userData');
     const dataUser: UserModel | null = dataUserString ? JSON.parse(dataUserString) : null;
 
     if (!dataUser) {

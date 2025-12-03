@@ -3,6 +3,7 @@
 import { motion } from "framer-motion"
 import { UserCircle2 } from "lucide-react"
 import { useNavigate } from 'react-router-dom'
+import { UserModel } from "../../model/user"
 
 const FeaturedChannelsSection = () => {
   const router = useNavigate()
@@ -16,6 +17,14 @@ const FeaturedChannelsSection = () => {
     const navigate = useNavigate()
 
     const handleClick = (channelName: string) => {
+       const dataUserString = sessionStorage.getItem('userData');
+    const dataUser: UserModel | null = dataUserString ? JSON.parse(dataUserString) : null;
+
+    if (!dataUser) {
+      window.location.href = '/login';
+      return;
+    }
+
       navigate(`/live/${channelName}`)
     }
 
