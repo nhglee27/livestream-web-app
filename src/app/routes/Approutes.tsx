@@ -1,5 +1,5 @@
 import { Routes, Route } from 'react-router-dom'
-import { HomePage, AboutPage, LoginPage, RegisterPage , LiveStreamPage } from '../pages'
+import { HomePage, AboutPage, LoginPage, RegisterPage , LiveStreamPage, MyInfor } from '../pages'
 
 export function AppRoutes() {
   return (
@@ -9,6 +9,7 @@ export function AppRoutes() {
       <Route path="/login" element={<LoginPage />} />
       <Route path="/register" element={<RegisterPage />} />
       <Route path="/live/:channelName" element={<LiveStreamPage />} />
+      <Route path="/my-info" element={<MyInfor />} />
     </Routes>
   )
 }

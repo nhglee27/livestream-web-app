@@ -8,7 +8,6 @@ import RegisterBackground from "./RegisterBackground";
 import RegisterLogo from "./RegisterLogo";
 import RegisterForm from "./RegisterForm";
 import RegisterSocial from "./RegisterSocial";
-import cookies from "js-cookies";
 
 import { authApi } from '../../api/authAPI';
 import {RegisterCredentials, RegisterResponse} from "../../dto/register";
@@ -18,7 +17,7 @@ const Register: React.FC = () => {
   const [showConfetti, setShowConfetti] = useState(false);
   const navigate = useNavigate();
 
-  const userDataString = cookies.getItem('userData');
+  const userDataString = sessionStorage.getItem('userData');
     
    useEffect(() => {
     if (userDataString) {
