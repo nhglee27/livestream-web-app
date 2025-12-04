@@ -11,9 +11,10 @@ import { useSelector, useDispatch } from 'react-redux';
 import { addMessage } from '../../store/chatSlice';
 import { RootState } from '../../store/store';
 import EmojiPicker from 'emoji-picker-react';
+import { chatApi } from '../../api/authAPI';
 
 interface Message {
-  id?: string;
+  id?: number;
   sender: string;
   content: string;
   channelName: string;
@@ -72,6 +73,8 @@ export default function ChatBox({ channelName }: ChatBoxProps) {
       setInput('');
     }
   };
+
+
 
   // WebSocket Connection
   useEffect(() => {
@@ -143,6 +146,18 @@ export default function ChatBox({ channelName }: ChatBoxProps) {
   }, [channelName, dispatch]);
 
   useEffect(() => {
+
+chatApi.history(channelName)
+    .then(response => {
+      let id: number = 0;
+      response.data.chats.forEach((msg) => {
+        let mess: Message = { id: id++, sender: msg.name, content: msg.chat, channelName: channelName };
+        dispatch(addMessage(mess));
+      });
+    })
+    .catch(err => console.error('History load failed:', err));
+
+
     if (messagesContainerRef.current) {
       const { scrollHeight } = messagesContainerRef.current;
       messagesContainerRef.current.scrollTo({
