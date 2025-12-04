@@ -1,71 +1,86 @@
-
-// src/api/login.ts
+// src/api/authAPI.ts (hoặc file chứa api của bạn)
 import { LoginCredentials, LoginResponse } from '../dto/login';
 import { RegisterCredentials, RegisterResponse } from '../dto/register';
 import axiosClient from "./axiosClients";
-import { StreamChannelRequest , StreamChannelResponse, CreateStreamerChannelRequest, CreateStreamerChannelRespone } from '../dto/stream';
+import { StreamChannelRequest, StreamChannelResponse, CreateStreamerChannelRequest, CreateStreamerChannelRespone } from '../dto/stream';
 import { FllowRequest, FllowResponse } from '../dto/action';
 import { UserComment, UserCommentRespone } from '../dto/cmt';
 
-// const api = axios.create({
-//   baseURL: process.env.VITE_API_URL || 'http://localhost:8080/api/v1',
-//   timeout: 8000,
-// });
+// --- 1. ĐỊNH NGHĨA INTERFACE (DTO) ---
 
-// const login = async (creds: LoginCredentials): Promise<LoginResponse> => {
-//   const { data } = await api.post<LoginResponse>('/auth/login', creds);
-  
-//   return data;
-// };
+// Interface dữ liệu gửi đi khi Update (Khớp với UpdateProfileRequest.java)
+export interface UpdateProfileRequest {
+  email: string;        // Dùng để định danh user
+  fullName: string;     // Java: fullName
+  dob?: string;         // Java: LocalDate (yyyy-MM-dd)
+  gender?: string;      // Java: gender
+  streamerName?: string; // Java: streamerName (tên kênh)
+}
 
+// Interface dữ liệu nhận về khi lấy Profile (Khớp với UserProfileResponse.java)
+export interface UserProfileResponse {
+  fullName: string;
+  email: string;
+  dob: string;
+  gender: string;
+  streamerName: string;
+  streamKey: string;
+}
 
-
-
-
+// Interface phản hồi chung từ Server (Wrapper)
+export interface ApiResponse<T> {
+  success: boolean;
+  message: string;
+  data: T;
+}
 
 export const authApi = {
-
-  // 
   login: async (credentials: LoginCredentials) => {
     return await axiosClient.post<LoginResponse>("/auth/login", credentials);
   },
-
   register: async (credentials: RegisterCredentials) => {
     return axiosClient.post<RegisterResponse>("/auth/register", credentials);
   }
-
 };
+
 export const filterCmt = {
   checkCmt: async (credentials: UserComment) => {
-    // gửi trực tiếp object credentials
     return await axiosClient.post<UserCommentRespone>("/predict", credentials);
   }
 }
 
-
 export const streamApi = {
-  // Lấy thông tin StreamChannel (nếu có endpoint GET /streamers/channel)
   getStreamChannel: async (credentials: StreamChannelRequest) => {
     return await axiosClient.get<StreamChannelResponse>("/streamers/channel", { params: credentials });
   },
 
-  // Tạo Streamer mới
   createStreamer: async (credentials: CreateStreamerChannelRequest) => {
     return await axiosClient.post<CreateStreamerChannelRespone>("/streamers/create", credentials);
   },
 
+  // --- 2. THÊM 2 HÀM MỚI TẠI ĐÂY ---
 
+  // GET /api/v1/streamers/me?email=...
+  getMyProfile: async (email: string) => {
+    // Lưu ý: params sẽ tự động chuyển thành ?email=value
+    return await axiosClient.get<ApiResponse<UserProfileResponse>>("/streamers/me", { 
+      params: { email } 
+    });
+  },
 
-};  export const actionsApi = {
+  // POST /api/v1/streamers/update
+  updateProfile: async (data: UpdateProfileRequest) => {
+    return await axiosClient.post<ApiResponse<any>>("/streamers/update", data);
+  }
+};
 
+export const actionsApi = {
   like: async (postId: string) => {
     return await axiosClient.post(`/posts/${postId}/like`);
   },
-
   share: async (postId: string) => {
     return await axiosClient.post(`/posts/${postId}/share`);
   },
-
   follow: async (credentials: FllowRequest) => {
     return await axiosClient.post<FllowResponse>(`/user/actions/subscribe`, credentials);
   },

@@ -30,7 +30,7 @@ export default function ChatBox({ channelName }: ChatBoxProps) {
   const [showEmoji, setShowEmoji] = useState(false);
   const [isConnected, setIsConnected] = useState(false);
 
-  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const messagesContainerRef = useRef<HTMLDivElement>(null);
   const clientRef = useRef<Client | null>(null);
   const navigate = useNavigate();
   const dispatch = useDispatch();
@@ -142,13 +142,18 @@ export default function ChatBox({ channelName }: ChatBoxProps) {
     };
   }, [channelName, dispatch]);
 
-  // Auto-scroll to bottom
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    if (messagesContainerRef.current) {
+      const { scrollHeight } = messagesContainerRef.current;
+      messagesContainerRef.current.scrollTo({
+        top: scrollHeight,
+        behavior: 'smooth',
+      });
+    }
   }, [messages]);
 
   return (
-    <div className="flex flex-col h-full bg-gradient-to-b from-gray-900 via-gray-950 to-black text-white rounded-2xl shadow-2xl overflow-hidden">
+    <div className="flex flex-col h-[600px] bg-gradient-to-b from-gray-900 via-gray-950 to-black text-white rounded-2xl shadow-2xl overflow-hidden">
       {/* Header */}
       <div className="p-4 border-b border-gray-800 bg-gray-900/70 backdrop-blur-md flex items-center justify-between z-10">
         <h3 className="font-semibold flex items-center text-lg">
@@ -170,6 +175,7 @@ export default function ChatBox({ channelName }: ChatBoxProps) {
 
       {/* Messages */}
       <div
+        ref={messagesContainerRef}
         className="flex-1 min-h-0 overflow-y-auto px-5 py-4 space-y-3
         scrollbar-thin scrollbar-thumb-purple-500 
         scrollbar-track-transparent
@@ -209,7 +215,6 @@ export default function ChatBox({ channelName }: ChatBoxProps) {
           ))
         )}
 
-        <div ref={messagesEndRef} />
       </div>
 
       {/* Input + Emoji Picker */}

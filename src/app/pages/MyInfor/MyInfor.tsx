@@ -4,8 +4,10 @@ import {
   Copy, Eye, EyeOff, Check, ArrowLeft,
   Edit3, Save, XCircle
 } from "lucide-react";
-import { Link, useLocation } from "react-router-dom";
-import toast from "react-hot-toast"; // Gợi ý thêm toast cho đẹp
+import { Link, useLocation, useNavigate } from "react-router-dom";
+import toast from "react-hot-toast"; 
+// Import API vừa tạo
+import { streamApi, UpdateProfileRequest } from "../../api/authAPI";
 
 interface UserProfile {
   name: string;
@@ -14,11 +16,9 @@ interface UserProfile {
   gender: string;
   channelName: string;
   streamKey: string;
-  // Cho phép chứa các trường khác (như token) để không bị mất khi spread
   [key: string]: any; 
 }
 
-// Giá trị mặc định để tránh lỗi Uncontrolled Input
 const defaultProfile: UserProfile = {
   name: "",
   email: "",
@@ -30,42 +30,75 @@ const defaultProfile: UserProfile = {
 
 const MyInfor = () => {
   const location = useLocation();
+  const navigate = useNavigate();
 
-  // State chứa user gốc để revert khi bấm Hủy
-  const [originalUser, setOriginalUser] = useState<UserProfile | null>(null);
-
-  // State chứa form đang nhập liệu
+  // State
   const [formData, setFormData] = useState<UserProfile | null>(null);
-
+  const [loading, setLoading] = useState(true); // Thêm trạng thái loading
   const [isEditing, setIsEditing] = useState(false);
   const [showKey, setShowKey] = useState(false);
   const [copied, setCopied] = useState(false);
 
-  // Load user từ sessionStorage
-  useEffect(() => {
+  // Helper: Lấy email từ session (vì API cần email để tìm user)
+  const getCurrentUserEmail = () => {
     const storageData = sessionStorage.getItem("userData");
-
-    if (storageData) {
-      try {
-        const parsed = JSON.parse(storageData);
-        // Merge dữ liệu từ storage vào default để đảm bảo không có trường nào bị undefined
-        const fullData = { ...defaultProfile, ...parsed };
-        
-        setOriginalUser(fullData);
-        setFormData(fullData);
-      } catch (err) {
-        console.error("Invalid userData in sessionStorage:", err);
-        setOriginalUser(null);
-        setFormData(null);
-      }
-    } else {
-      // Chưa đăng nhập -> Có thể redirect hoặc hiện thông báo
-      setOriginalUser(null);
-      setFormData(null);
+    if (!storageData) return null;
+    try {
+      const parsed = JSON.parse(storageData);
+      return parsed.email || parsed.sub || null; // Tùy vào cách bạn lưu lúc login
+    } catch {
+      return null;
     }
+  };
+
+  // 1. TÍCH HỢP API: Lấy dữ liệu khi vào trang (GET /me)
+  useEffect(() => {
+    const fetchProfile = async () => {
+      const email = getCurrentUserEmail();
+      
+      if (!email) {
+        setLoading(false);
+        return; // Chưa đăng nhập
+      }
+
+      try {
+        const response = await streamApi.getMyProfile(email);
+        
+        // Kiểm tra success dựa trên ApiResponse wrapper
+        if (response.data.success) {
+          const apiData = response.data.data;
+          
+          // Map dữ liệu từ API về Form của React
+          const mappedData: UserProfile = {
+            ...defaultProfile,
+            name: apiData.fullName,
+            email: apiData.email,
+            dob: apiData.dob || "",
+            gender: apiData.gender || "Nam",
+            channelName: apiData.streamerName || "",
+            streamKey: apiData.streamKey || "",
+          };
+          setFormData(mappedData);
+        } else {
+          toast.error("Không tìm thấy hồ sơ người dùng");
+        }
+      } catch (error) {
+        console.error("Lỗi tải hồ sơ:", error);
+        toast.error("Lỗi kết nối máy chủ");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchProfile();
   }, [location.pathname]);
 
-  if (!formData) {
+  // Xử lý chưa đăng nhập hoặc đang tải
+  if (loading) {
+    return <div className="min-h-screen bg-gray-950 text-white flex items-center justify-center">Đang tải thông tin...</div>;
+  }
+
+  if (!formData && !loading) {
     return (
       <div className="min-h-screen bg-gray-950 text-white flex items-center justify-center">
         <div className="text-center">
@@ -82,55 +115,66 @@ const MyInfor = () => {
     setFormData((prev) => prev ? { ...prev, [name]: value } : prev);
   };
 
-  const handleSave = () => {
+  // 2. TÍCH HỢP API: Lưu dữ liệu (POST /update)
+  const handleSave = async () => {
     if (!formData) return;
 
-    // 1. Lấy dữ liệu cũ từ storage để đảm bảo giữ lại TOKEN
-    const currentStorage = sessionStorage.getItem("userData");
-    let currentData = {};
-    if (currentStorage) {
-        try {
-            currentData = JSON.parse(currentStorage);
-        } catch (e) { /* ignore */ }
+    try {
+      // Chuẩn bị payload đúng chuẩn Java UpdateProfileRequest
+      const payload: UpdateProfileRequest = {
+        email: formData.email, // Email không đổi (dùng làm khóa chính tìm user)
+        fullName: formData.name,
+        dob: formData.dob,
+        gender: formData.gender,
+        streamerName: formData.channelName
+      };
+
+      const response = await streamApi.updateProfile(payload);
+
+      if (response.data.success) {
+        toast.success("Cập nhật thành công!");
+        setIsEditing(false);
+        
+        // Cập nhật lại sessionStorage (để Header hiển thị đúng tên mới ngay lập tức nếu cần)
+        const storageData = sessionStorage.getItem("userData");
+        if (storageData) {
+            const parsed = JSON.parse(storageData);
+            sessionStorage.setItem("userData", JSON.stringify({ ...parsed, name: formData.name }));
+        }
+      } else {
+        toast.error(response.data.message || "Cập nhật thất bại");
+      }
+
+    } catch (error: any) {
+      console.error("Update error:", error);
+      // Hiển thị lỗi từ Backend trả về (nếu có)
+      const msg = error.response?.data?.message || "Lỗi hệ thống khi cập nhật";
+      toast.error(msg);
     }
-
-    // 2. Merge dữ liệu cũ (chứa token) + dữ liệu mới form
-    const dataToSave = {
-        ...currentData,
-        ...formData
-    };
-
-    console.log("Saving merged data:", dataToSave);
-
-    // 3. Lưu vào sessionStorage
-    sessionStorage.setItem("userData", JSON.stringify(dataToSave));
-
-    // 4. Cập nhật lại state gốc
-    setOriginalUser(dataToSave);
-    setIsEditing(false);
-
-    // Dùng toast hoặc alert
-    // alert("Cập nhật thông tin thành công!");
-    toast.success("Cập nhật hồ sơ thành công!");
   };
 
+  // Nút Hủy: Load lại trang để lấy lại dữ liệu cũ từ Server
   const handleCancel = () => {
-    setFormData(originalUser);  // Reset về dữ liệu gốc lúc mới vào trang
     setIsEditing(false);
+    window.location.reload(); 
   };
 
   const handleCopyStreamKey = () => {
-    const key = formData.streamKey || "Chưa có key";
-    navigator.clipboard.writeText(key);
-    setCopied(true);
-    toast.success("Đã sao chép Stream Key!");
-    setTimeout(() => setCopied(false), 2000);
+    const key = formData?.streamKey;
+    if (key) {
+        navigator.clipboard.writeText(key);
+        setCopied(true);
+        toast.success("Đã sao chép Stream Key!");
+        setTimeout(() => setCopied(false), 2000);
+    } else {
+        toast.error("Chưa có Stream Key");
+    }
   };
 
   return (
     <div className="min-h-screen bg-gray-950 text-white p-6 flex items-center justify-center relative overflow-hidden">
       
-      {/* Background decoration (optional) */}
+      {/* Background decoration */}
       <div className="absolute top-0 left-0 w-full h-full overflow-hidden z-0 pointer-events-none">
           <div className="absolute top-[-10%] right-[-5%] w-96 h-96 bg-purple-600/20 rounded-full blur-3xl"></div>
           <div className="absolute bottom-[-10%] left-[-5%] w-96 h-96 bg-cyan-600/20 rounded-full blur-3xl"></div>
@@ -148,7 +192,6 @@ const MyInfor = () => {
             </h1>
           </div>
 
-          {/* Nút Edit nhanh ở header mobile */}
           {!isEditing && (
             <button 
               onClick={() => setIsEditing(true)}
@@ -179,7 +222,7 @@ const MyInfor = () => {
                   <input
                     type="text"
                     name="name"
-                    value={formData.name || ""}
+                    value={formData?.name || ""}
                     onChange={handleInputChange}
                     disabled={!isEditing}
                     placeholder="Nhập họ tên của bạn"
@@ -195,7 +238,7 @@ const MyInfor = () => {
                   <Mail className="w-5 h-5 text-gray-600" />
                   <input
                     type="email"
-                    value={formData.email || ""}
+                    value={formData?.email || ""}
                     disabled
                     className="bg-transparent w-full focus:outline-none cursor-not-allowed text-gray-500"
                   />
@@ -210,7 +253,7 @@ const MyInfor = () => {
                     <input
                       type="date"
                       name="dob"
-                      value={formData.dob || ""}
+                      value={formData?.dob || ""}
                       onChange={handleInputChange}
                       disabled={!isEditing}
                       className="bg-transparent w-full text-gray-200 focus:outline-none disabled:cursor-not-allowed [&::-webkit-calendar-picker-indicator]:invert [&::-webkit-calendar-picker-indicator]:opacity-50"
@@ -224,7 +267,7 @@ const MyInfor = () => {
                   <div className={`flex items-center gap-3 p-3.5 rounded-xl border transition-all ${isEditing ? 'bg-gray-800 border-purple-500/50 ring-2 ring-purple-500/10' : 'bg-gray-800/40 border-gray-700/50'}`}>
                     <select
                       name="gender"
-                      value={formData.gender || "Nam"}
+                      value={formData?.gender || "Nam"}
                       onChange={handleInputChange}
                       disabled={!isEditing}
                       className="bg-transparent w-full text-gray-200 focus:outline-none disabled:cursor-not-allowed appearance-none"
@@ -257,7 +300,7 @@ const MyInfor = () => {
                     <input
                         type="text"
                         name="channelName"
-                        value={formData.channelName || ""}
+                        value={formData?.channelName || ""}
                         onChange={handleInputChange}
                         disabled={!isEditing}
                         placeholder={!isEditing ? "Chưa đặt tên kênh" : "Nhập tên kênh..."}
@@ -276,9 +319,9 @@ const MyInfor = () => {
                   <div className="relative group">
                     <input
                       type={showKey ? "text" : "password"}
-                      value={formData.streamKey || ""}
+                      value={formData?.streamKey || ""}
                       readOnly
-                      placeholder="Key sẽ xuất hiện khi tạo live"
+                      placeholder="Key sẽ xuất hiện khi bạn có kênh"
                       className="w-full bg-black/40 border border-gray-700/50 text-gray-300 text-sm font-mono rounded-xl px-4 py-3.5 pr-24 focus:outline-none focus:border-cyan-500/50 transition-colors cursor-text"
                     />
                     
@@ -339,7 +382,6 @@ const MyInfor = () => {
               )}
             </div>
           </div>
-
         </div>
       </div>
     </div>
