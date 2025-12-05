@@ -5,6 +5,7 @@ import axiosClient from "./axiosClients";
 import { StreamChannelRequest, StreamChannelResponse, CreateStreamerChannelRequest, CreateStreamerChannelRespone } from '../dto/stream';
 import { FllowRequest, FllowResponse } from '../dto/action';
 import { UserComment, UserCommentRespone } from '../dto/cmt';
+import { ChatRespone } from '../dto/chat';
 
 // --- 1. ĐỊNH NGHĨA INTERFACE (DTO) ---
 
@@ -86,5 +87,11 @@ export const actionsApi = {
   },
   unfollow: async (credentials: FllowRequest) => {
     return await axiosClient.delete<FllowResponse>(`/user/actions/unsubscribe`, { data: credentials });
+  }
+};
+
+export   const chatApi = {
+  history: async (stream:string) => {
+    return await axiosClient.get<ChatRespone>(`user/chat/history/${stream}`);
   }
 };
