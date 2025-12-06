@@ -36,6 +36,7 @@ export default function StreamPlayer({ src, poster }: StreamPlayerProps) {
         console.error('HLS error', data);
         toast.error('Failed to load stream');
         setError('Failed to load stream');
+        
       });
 
       return () => hls.destroy();
