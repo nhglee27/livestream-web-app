@@ -6,7 +6,7 @@ import {
 } from "lucide-react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import toast from "react-hot-toast"; 
-// Import API vừa tạo
+// Import API
 import { streamApi, UpdateProfileRequest } from "../../api/authAPI";
 
 interface UserProfile {
@@ -23,7 +23,7 @@ const defaultProfile: UserProfile = {
   name: "",
   email: "",
   dob: "",
-  gender: "Nam",
+  gender: "Male", // Changed default to English
   channelName: "",
   streamKey: "",
 };
@@ -34,57 +34,56 @@ const MyInfor = () => {
 
   // State
   const [formData, setFormData] = useState<UserProfile | null>(null);
-  const [loading, setLoading] = useState(true); // Thêm trạng thái loading
+  const [loading, setLoading] = useState(true);
   const [isEditing, setIsEditing] = useState(false);
   const [showKey, setShowKey] = useState(false);
   const [copied, setCopied] = useState(false);
 
-  // Helper: Lấy email từ session (vì API cần email để tìm user)
+  // Helper: Get email from session
   const getCurrentUserEmail = () => {
     const storageData = sessionStorage.getItem("userData");
     if (!storageData) return null;
     try {
       const parsed = JSON.parse(storageData);
-      return parsed.email || parsed.sub || null; // Tùy vào cách bạn lưu lúc login
+      return parsed.email || parsed.sub || null;
     } catch {
       return null;
     }
   };
 
-  // 1. TÍCH HỢP API: Lấy dữ liệu khi vào trang (GET /me)
+  // 1. INTEGRATE API: Fetch data on load (GET /me)
   useEffect(() => {
     const fetchProfile = async () => {
       const email = getCurrentUserEmail();
       
       if (!email) {
         setLoading(false);
-        return; // Chưa đăng nhập
+        return; // Not logged in
       }
 
       try {
         const response = await streamApi.getMyProfile(email);
         
-        // Kiểm tra success dựa trên ApiResponse wrapper
         if (response.data.success) {
           const apiData = response.data.data;
           
-          // Map dữ liệu từ API về Form của React
+          // Map API data to React Form
           const mappedData: UserProfile = {
             ...defaultProfile,
             name: apiData.fullName,
             email: apiData.email,
             dob: apiData.dob || "",
-            gender: apiData.gender || "Nam",
+            gender: apiData.gender || "Male", // Default to Male if null
             channelName: apiData.streamerName || "",
             streamKey: apiData.streamKey || "",
           };
           setFormData(mappedData);
         } else {
-          toast.error("Không tìm thấy hồ sơ người dùng");
+          toast.error("User profile not found");
         }
       } catch (error) {
-        console.error("Lỗi tải hồ sơ:", error);
-        toast.error("Lỗi kết nối máy chủ");
+        console.error("Error loading profile:", error);
+        toast.error("Server connection error");
       } finally {
         setLoading(false);
       }
@@ -93,36 +92,33 @@ const MyInfor = () => {
     fetchProfile();
   }, [location.pathname]);
 
-  // Xử lý chưa đăng nhập hoặc đang tải
   if (loading) {
-    return <div className="min-h-screen bg-gray-950 text-white flex items-center justify-center">Đang tải thông tin...</div>;
+    return <div className="min-h-screen bg-gray-950 text-white flex items-center justify-center">Loading info...</div>;
   }
 
   if (!formData && !loading) {
     return (
       <div className="min-h-screen bg-gray-950 text-white flex items-center justify-center">
         <div className="text-center">
-            <h2 className="text-xl font-bold mb-2">Chưa đăng nhập</h2>
-            <Link to="/login" className="text-purple-400 hover:underline">Quay lại đăng nhập</Link>
+            <h2 className="text-xl font-bold mb-2">You Are Not Log In Yet</h2>
+            <Link to="/login" className="text-purple-400 hover:underline">Back to Login</Link>
         </div>
       </div>
     );
   }
 
-  // Xử lý thay đổi input
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     setFormData((prev) => prev ? { ...prev, [name]: value } : prev);
   };
 
-  // 2. TÍCH HỢP API: Lưu dữ liệu (POST /update)
+  // 2. INTEGRATE API: Save data (POST /update)
   const handleSave = async () => {
     if (!formData) return;
 
     try {
-      // Chuẩn bị payload đúng chuẩn Java UpdateProfileRequest
       const payload: UpdateProfileRequest = {
-        email: formData.email, // Email không đổi (dùng làm khóa chính tìm user)
+        email: formData.email,
         fullName: formData.name,
         dob: formData.dob,
         gender: formData.gender,
@@ -132,28 +128,26 @@ const MyInfor = () => {
       const response = await streamApi.updateProfile(payload);
 
       if (response.data.success) {
-        toast.success("Cập nhật thành công!");
+        toast.success("Update successful!");
         setIsEditing(false);
         
-        // Cập nhật lại sessionStorage (để Header hiển thị đúng tên mới ngay lập tức nếu cần)
+        // Update session storage
         const storageData = sessionStorage.getItem("userData");
         if (storageData) {
             const parsed = JSON.parse(storageData);
             sessionStorage.setItem("userData", JSON.stringify({ ...parsed, name: formData.name }));
         }
       } else {
-        toast.error(response.data.message || "Cập nhật thất bại");
+        toast.error(response.data.message || "Update failed");
       }
 
     } catch (error: any) {
       console.error("Update error:", error);
-      // Hiển thị lỗi từ Backend trả về (nếu có)
-      const msg = error.response?.data?.message || "Lỗi hệ thống khi cập nhật";
+      const msg = error.response?.data?.message || "System error during update";
       toast.error(msg);
     }
   };
 
-  // Nút Hủy: Load lại trang để lấy lại dữ liệu cũ từ Server
   const handleCancel = () => {
     setIsEditing(false);
     window.location.reload(); 
@@ -164,10 +158,10 @@ const MyInfor = () => {
     if (key) {
         navigator.clipboard.writeText(key);
         setCopied(true);
-        toast.success("Đã sao chép Stream Key!");
+        toast.success("Stream Key copied!");
         setTimeout(() => setCopied(false), 2000);
     } else {
-        toast.error("Chưa có Stream Key");
+        toast.error("No Stream Key available");
     }
   };
 
@@ -188,7 +182,7 @@ const MyInfor = () => {
                 <ArrowLeft className="w-5 h-5"/>
             </Link>
             <h1 className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-cyan-400">
-                Hồ sơ cá nhân
+                My Profile
             </h1>
           </div>
 
@@ -204,19 +198,19 @@ const MyInfor = () => {
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           
-          {/* --- CỘT 1: THÔNG TIN CÁ NHÂN --- */}
+          {/* --- COLUMN 1: PERSONAL INFO --- */}
           <div className="bg-gray-900/60 backdrop-blur-md border border-gray-800 p-6 rounded-3xl shadow-2xl flex flex-col h-full">
             <div className="flex items-center gap-3 mb-6 border-b border-gray-800 pb-4">
               <div className="p-3 bg-purple-500/10 rounded-xl text-purple-400 ring-1 ring-purple-500/20">
                 <User className="w-6 h-6" />
               </div>
-              <h2 className="text-xl font-semibold text-gray-100">Thông tin tài khoản</h2>
+              <h2 className="text-xl font-semibold text-gray-100">Account Information</h2>
             </div>
 
             <div className="space-y-5 flex-1">
-              {/* Họ tên */}
+              {/* Full Name */}
               <div className="space-y-1.5">
-                <label className="text-sm font-medium text-gray-400 ml-1">Họ và tên</label>
+                <label className="text-sm font-medium text-gray-400 ml-1">Full Name</label>
                 <div className={`flex items-center gap-3 p-3.5 rounded-xl border transition-all duration-200 ${isEditing ? 'bg-gray-800 border-purple-500/50 ring-2 ring-purple-500/10' : 'bg-gray-800/40 border-gray-700/50'}`}>
                   <User className="w-5 h-5 text-gray-500" />
                   <input
@@ -225,7 +219,7 @@ const MyInfor = () => {
                     value={formData?.name || ""}
                     onChange={handleInputChange}
                     disabled={!isEditing}
-                    placeholder="Nhập họ tên của bạn"
+                    placeholder="Enter your full name"
                     className="bg-transparent w-full text-gray-200 focus:outline-none disabled:cursor-not-allowed placeholder-gray-600"
                   />
                 </div>
@@ -233,7 +227,7 @@ const MyInfor = () => {
 
               {/* Email */}
               <div className="space-y-1.5">
-                <label className="text-sm font-medium text-gray-400 ml-1">Email <span className="text-xs text-gray-600 font-normal ml-1">(Không thể thay đổi)</span></label>
+                <label className="text-sm font-medium text-gray-400 ml-1">Email <span className="text-xs text-gray-600 font-normal ml-1">(Cannot be changed)</span></label>
                 <div className="flex items-center gap-3 bg-gray-800/30 p-3.5 rounded-xl border border-gray-700/30 text-gray-400 cursor-not-allowed">
                   <Mail className="w-5 h-5 text-gray-600" />
                   <input
@@ -246,9 +240,9 @@ const MyInfor = () => {
               </div>
 
               <div className="grid grid-cols-2 gap-4">
-                {/* Ngày sinh */}
+                {/* DOB */}
                 <div className="space-y-1.5">
-                  <label className="text-sm font-medium text-gray-400 ml-1">Ngày sinh</label>
+                  <label className="text-sm font-medium text-gray-400 ml-1">Date of Birth</label>
                   <div className={`flex items-center gap-3 p-3.5 rounded-xl border transition-all ${isEditing ? 'bg-gray-800 border-purple-500/50 ring-2 ring-purple-500/10' : 'bg-gray-800/40 border-gray-700/50'}`}>
                     <input
                       type="date"
@@ -261,20 +255,19 @@ const MyInfor = () => {
                   </div>
                 </div>
 
-                {/* Giới tính */}
+                {/* Gender */}
                 <div className="space-y-1.5">
-                  <label className="text-sm font-medium text-gray-400 ml-1">Giới tính</label>
+                  <label className="text-sm font-medium text-gray-400 ml-1">Gender</label>
                   <div className={`flex items-center gap-3 p-3.5 rounded-xl border transition-all ${isEditing ? 'bg-gray-800 border-purple-500/50 ring-2 ring-purple-500/10' : 'bg-gray-800/40 border-gray-700/50'}`}>
                     <select
                       name="gender"
-                      value={formData?.gender || "Nam"}
+                      value={formData?.gender || "Male"}
                       onChange={handleInputChange}
                       disabled={!isEditing}
                       className="bg-transparent w-full text-gray-200 focus:outline-none disabled:cursor-not-allowed appearance-none"
                     >
-                      <option value="Nam" className="bg-gray-900">Nam</option>
-                      <option value="Nữ" className="bg-gray-900">Nữ</option>
-                      <option value="Khác" className="bg-gray-900">Khác</option>
+                      <option value="Male" className="bg-gray-900">Male</option>
+                      <option value="Female" className="bg-gray-900">Female</option>
                     </select>
                   </div>
                 </div>
@@ -282,20 +275,20 @@ const MyInfor = () => {
             </div>
           </div>
 
-          {/* --- CỘT 2: THÔNG TIN CHANNEL --- */}
+          {/* --- COLUMN 2: CHANNEL INFO --- */}
           <div className="bg-gray-900/60 backdrop-blur-md border border-gray-800 p-6 rounded-3xl shadow-2xl h-fit flex flex-col justify-between">
             <div>
               <div className="flex items-center gap-3 mb-6 border-b border-gray-800 pb-4">
                 <div className="p-3 bg-cyan-500/10 rounded-xl text-cyan-400 ring-1 ring-cyan-500/20">
                   <Tv className="w-6 h-6" />
                 </div>
-                <h2 className="text-xl font-semibold text-gray-100">Kênh Livestream</h2>
+                <h2 className="text-xl font-semibold text-gray-100">Livestream Channel</h2>
               </div>
 
               <div className="space-y-6">
-                {/* Tên kênh */}
+                {/* Channel Name */}
                 <div className="space-y-1.5">
-                  <label className="text-sm font-medium text-gray-400 ml-1">Tên kênh hiển thị</label>
+                  <label className="text-sm font-medium text-gray-400 ml-1">Display Channel Name</label>
                   <div className={`w-full p-3.5 rounded-xl border transition-all ${isEditing ? 'bg-gray-800 border-cyan-500/50 ring-2 ring-cyan-500/10' : 'bg-gray-800/40 border-gray-700/50'}`}>
                     <input
                         type="text"
@@ -303,7 +296,7 @@ const MyInfor = () => {
                         value={formData?.channelName || ""}
                         onChange={handleInputChange}
                         disabled={!isEditing}
-                        placeholder={!isEditing ? "Chưa đặt tên kênh" : "Nhập tên kênh..."}
+                        placeholder={!isEditing ? "Channel name not set" : "Enter channel name..."}
                         className="w-full bg-transparent text-white font-medium text-lg focus:outline-none disabled:cursor-not-allowed placeholder-gray-600"
                     />
                   </div>
@@ -313,7 +306,7 @@ const MyInfor = () => {
                 <div className="space-y-2">
                   <label className="text-sm font-medium text-gray-400 ml-1 flex items-center gap-2">
                     <Key className="w-3 h-3 text-cyan-500" />
-                    Stream Key (Mã luồng)
+                    Stream Key
                   </label>
                   
                   <div className="relative group">
@@ -321,7 +314,7 @@ const MyInfor = () => {
                       type={showKey ? "text" : "password"}
                       value={formData?.streamKey || ""}
                       readOnly
-                      placeholder="Key sẽ xuất hiện khi bạn có kênh"
+                      placeholder="Key will appear when you have a channel"
                       className="w-full bg-black/40 border border-gray-700/50 text-gray-300 text-sm font-mono rounded-xl px-4 py-3.5 pr-24 focus:outline-none focus:border-cyan-500/50 transition-colors cursor-text"
                     />
                     
@@ -329,7 +322,7 @@ const MyInfor = () => {
                       <button
                         onClick={() => setShowKey(!showKey)}
                         className="p-2 hover:bg-gray-700 rounded-lg transition text-gray-400 hover:text-white"
-                        title={showKey ? "Ẩn" : "Hiện"}
+                        title={showKey ? "Hide" : "Show"}
                         type="button"
                       >
                         {showKey ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
@@ -346,7 +339,7 @@ const MyInfor = () => {
                     </div>
                   </div>
                   <p className="text-xs text-gray-500 mt-2 ml-1">
-                    ⚠️ Stream Key là bí mật. Không chia sẻ cho người khác.
+                    ⚠️ Stream Key is secret. Do not share with anyone.
                   </p>
                 </div>
               </div>
@@ -360,7 +353,7 @@ const MyInfor = () => {
                   className="w-full py-3.5 rounded-xl bg-gradient-to-r from-purple-600 to-cyan-600 hover:from-purple-500 hover:to-cyan-500 text-white font-semibold shadow-lg shadow-purple-900/20 transition-all active:scale-[0.98] flex items-center justify-center gap-2"
                 >
                   <Edit3 className="w-5 h-5" />
-                  Chỉnh sửa thông tin
+                  Edit Profile
                 </button>
               ) : (
                 <div className="flex gap-4">
@@ -369,14 +362,14 @@ const MyInfor = () => {
                     className="flex-1 py-3.5 rounded-xl bg-gray-800 text-gray-300 font-medium hover:bg-gray-700 border border-gray-700 transition active:scale-[0.98] flex items-center justify-center gap-2"
                   >
                     <XCircle className="w-5 h-5" />
-                    Hủy bỏ
+                    Cancel
                   </button>
                   <button 
                     onClick={handleSave}
                     className="flex-1 py-3.5 rounded-xl bg-green-600 text-white font-semibold hover:bg-green-500 shadow-lg shadow-green-900/20 transition active:scale-[0.98] flex items-center justify-center gap-2"
                   >
                     <Save className="w-5 h-5" />
-                    Lưu thay đổi
+                    Save Changes
                   </button>
                 </div>
               )}
